@@ -331,15 +331,96 @@
           return coordenada;
         }
 
-        function setMapa() {
+            
+        function plotarPontosMapa(pontos) {
+
+                // ✅ esconder input e label após leitura
+          document.getElementById("fileCSV").style.display = "none";
+          document.getElementById("uploadIcon").style.display = "none";
+            //Recinto - Dados devem ser passados 
+            let nomeRecinto = pontos[0].NomeRecinto;
+            let latitudeRecinto = pontos[0].LatitudeRecinto;
+            let longitudeRecinto = pontos[0].LongitudeRecinto;
+            let codRecinto = pontos[0].CódigoRecinto;
+            // Mapas base gratuitos
+            const baseMaps = {
+              "OpenStreetMap": L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                attribution: "© OpenStreetMap"
+              }),
+              "Carto Light": L.tileLayer("https://cartodb-basemaps-a.global.ssl.fastly.net/light_all/{z}/{x}/{y}{r}.png", {
+                attribution: "© Carto"
+              }),
+              "Carto Dark": L.tileLayer("https://cartodb-basemaps-a.global.ssl.fastly.net/dark_all/{z}/{x}/{y}{r}.png", {
+                attribution: "© Carto"
+              }),
+              "Esri World": L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}", {
+                attribution: "Tiles © Esri"
+              }),
+              // ✅ Satélite Esri
+              "Esri Satellite": L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+                attribution: "Tiles © Esri & the GIS community"
+              })
+            };
+            // Ícones ideais para cada mapa
+            const baseMapIcons = {
+              "OpenStreetMap": "🗺️",       // mapa genérico
+              "Carto Light": "🌞",          // estilo claro
+              "Carto Dark": "🌙",           // estilo escuro
+              "Esri World": "🌍",           // mapa de ruas/mundo
+              "Esri Satellite": "🛰️"       // satélite
+            };
+
+            // Ícones da web
+            arrayIcones = []
+
+
+            latitudeRecinto = latitudeRecinto ? latitudeRecinto : parseFloat(-20.329); 
+            longitudeRecinto = longitudeRecinto ? longitudeRecinto : parseFloat(-40.292); 
+            
+
+          // console.log('coord',pontos.length,pontos[0].Latitude,pontos[0].Longitude,latitude,longitude)
+            const nivelZoom = 16;
+            const  precisaoAgrupamentoMinimo = 0;
+            const  precisaoAgrupamentoMaximo = 80; 
+            
+
             // Inicializa o mapa com OpenStreetMap
             const map = L.map("map", {
               center: [latitudeRecinto, longitudeRecinto], // Vila Velha/ES
               zoom: 12,
               layers: [baseMaps["OpenStreetMap"]]
-            }); 
+            });      
+            
+            ////////////////////////////////
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+              attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
 
-                   // cria controle de upload dentro do mapa
+            // Evento de clique no mapa - mostra coordenadas
+            map.on("click", function(e) {
+              const lat = e.latlng.lat;
+              const lng = e.latlng.lng;
+
+              // Referência: centro do mapa (pode ser outro ponto fixo)
+              const centro = map.getCenter();
+              const azimute = calcularAzimute(centro.lat, centro.lng, lat, lng);
+
+              L.popup()
+                .setLatLng(e.latlng)
+                .setContent(`
+                  <b>Coordenadas:</b><br>
+                  Latitude: ${lat.toFixed(6)}<br>
+                  Longitude: ${lng.toFixed(6)}<br>
+                  Azimute em relação ao norte: ${azimute.toFixed(2)}°
+                `)
+                .openOn(map);
+            });
+
+            // Define o título
+            document.getElementById("map-title").innerHTML = nomeRecinto + ': ' + codRecinto; 
+
+
+            // cria controle de upload dentro do mapa
             const UploadControl = L.Control.extend({
               options: { position: 'topright' },
               onAdd: function () {
@@ -355,493 +436,376 @@
               }
             });
             map.addControl(new UploadControl());
-        }
-    function plotarPontosMapa(pontos) {
 
-            // ✅ esconder input e label após leitura
-      document.getElementById("fileCSV").style.display = "none";
-      document.getElementById("uploadIcon").style.display = "none";
-        //Recinto - Dados devem ser passados 
-        let nomeRecinto = pontos[0].NomeRecinto;
-        let latitudeRecinto = pontos[0].LatitudeRecinto;
-        let longitudeRecinto = pontos[0].LongitudeRecinto;
-        let codRecinto = pontos[0].CódigoRecinto;
-        // Mapas base gratuitos
-        const baseMaps = {
-          "OpenStreetMap": L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-            attribution: "© OpenStreetMap"
-          }),
-          "Carto Light": L.tileLayer("https://cartodb-basemaps-a.global.ssl.fastly.net/light_all/{z}/{x}/{y}{r}.png", {
-            attribution: "© Carto"
-          }),
-          "Carto Dark": L.tileLayer("https://cartodb-basemaps-a.global.ssl.fastly.net/dark_all/{z}/{x}/{y}{r}.png", {
-            attribution: "© Carto"
-          }),
-          "Esri World": L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}", {
-            attribution: "Tiles © Esri"
-          }),
-          // ✅ Satélite Esri
-          "Esri Satellite": L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
-            attribution: "Tiles © Esri & the GIS community"
-          })
-        };
-        // Ícones ideais para cada mapa
-        const baseMapIcons = {
-          "OpenStreetMap": "🗺️",       // mapa genérico
-          "Carto Light": "🌞",          // estilo claro
-          "Carto Dark": "🌙",           // estilo escuro
-          "Esri World": "🌍",           // mapa de ruas/mundo
-          "Esri Satellite": "🛰️"       // satélite
-        };
+            // evento de upload
+            document.getElementById("fileCSV").addEventListener("change", (event) => {
+              const arquivo = event.target.files[0];
+              if (!arquivo) return;
 
-        // Ícones da web
-        arrayIcones = []
-
-
-        latitudeRecinto = latitudeRecinto ? latitudeRecinto : parseFloat(-20.329); 
-        longitudeRecinto = longitudeRecinto ? longitudeRecinto : parseFloat(-40.292); 
-        
-
-      // console.log('coord',pontos.length,pontos[0].Latitude,pontos[0].Longitude,latitude,longitude)
-        const nivelZoom = 16;
-        const  precisaoAgrupamentoMinimo = 0;
-        const  precisaoAgrupamentoMaximo = 80; 
-         
-
-        // Inicializa o mapa com OpenStreetMap
-        const map = L.map("map", {
-          center: [latitudeRecinto, longitudeRecinto], // Vila Velha/ES
-          zoom: 12,
-          layers: [baseMaps["OpenStreetMap"]]
-        });      
-        
-        ////////////////////////////////
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
-
-        // Evento de clique no mapa - mostra coordenadas
-        map.on("click", function(e) {
-          const lat = e.latlng.lat;
-          const lng = e.latlng.lng;
-
-          // Referência: centro do mapa (pode ser outro ponto fixo)
-          const centro = map.getCenter();
-          const azimute = calcularAzimute(centro.lat, centro.lng, lat, lng);
-
-          L.popup()
-            .setLatLng(e.latlng)
-            .setContent(`
-              <b>Coordenadas:</b><br>
-              Latitude: ${lat.toFixed(6)}<br>
-              Longitude: ${lng.toFixed(6)}<br>
-              Azimute em relação ao norte: ${azimute.toFixed(2)}°
-            `)
-            .openOn(map);
-        });
-
-        // Define o título
-        document.getElementById("map-title").innerHTML = nomeRecinto + ': ' + codRecinto; 
-
-
-        // cria controle de upload dentro do mapa
-        const UploadControl = L.Control.extend({
-          options: { position: 'topright' },
-          onAdd: function () {
-            const container = L.DomUtil.create('div', 'leaflet-control-upload');
-            container.innerHTML = `
-              <label for="fileCSV" title="Selecionar arquivo CSV">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                  <path d="M5 20h14v-2H5v2zm7-18l-7 7h4v6h6v-6h4l-7-7z"/>
-                </svg>
-              </label>
-            `;
-            return container;
-          }
-        });
-        map.addControl(new UploadControl());
-
-        // evento de upload
-        document.getElementById("fileCSV").addEventListener("change", (event) => {
-          const arquivo = event.target.files[0];
-          if (!arquivo) return;
-
-          const reader = new FileReader();
-          reader.onload = () => {
-            pontos = csvParaJson(reader.result);
-            console.log("CSV convertido em JSON:", pontos);
-            usarPontos();
-            event.target.value = ""; // limpa para permitir re-seleção
-          };
-          reader.readAsText(arquivo);
-        });
-        //Popup seletor de tipo de mapa. Aparece no canto superior direito
-        const MapSelector = L.Control.extend({
-          options: { position: "topright" },
-          onAdd: function () {
-            const container = L.DomUtil.create("div", "leaflet-bar leaflet-control leaflet-control-custom");
-
-            container.innerHTML = `
-              <img src="https://cdn-icons-png.flaticon.com/512/854/854878.png" 
-                  alt="map icon" style="width:24px;height:24px;">
-            `;
-
-            // estilo de botão 3D
-            container.style.background = "linear-gradient(180deg, #2196F3, #1565C0)"; // azul com gradiente
-            container.style.border = "1px solid #0D47A1";
-            container.style.borderRadius = "6px";
-            container.style.cursor = "pointer";
-            container.style.padding = "5px";
-            container.style.boxShadow = "0 4px #0D47A1"; // sombra sólida abaixo
-            container.style.transition = "all 0.2s ease";
-
-            // efeito ao clicar
-            container.onmousedown = function () {
-              container.style.boxShadow = "0 2px #0D47A1";
-              container.style.transform = "translateY(2px)";
-            };
-            container.onmouseup = function () {
-              container.style.boxShadow = "0 4px #0D47A1";
-              container.style.transform = "translateY(0)";
-            };
-
-            // Evita que o clique no controle arraste o mapa
-            L.DomEvent.disableClickPropagation(container);
-
-            // Ao clicar, abre popup com opções
-            container.onclick = function () {
-              let html = "<b>Selecione o mapa:</b><br>";
-              Object.keys(baseMaps).forEach(nome => {
-                const icon = baseMapIcons[nome] || "🗺️"; // fallback
-                html += `<div style="cursor:pointer; margin:3px; color:blue;" 
-                          onclick="window.setBaseMap('${nome}')">${icon} ${nome}</div>`;
-              });
-              L.popup()
-                .setLatLng(map.getCenter())
-                .setContent(html)
-                .openOn(map);
-            };
-
-            return container;
-          }
-        });
-        
-        map.addControl(new MapSelector());
-
-        // Função global para trocar mapa base
-        window.setBaseMap = function (nome) {
-          map.eachLayer(layer => {
-            if (layer instanceof L.TileLayer) {
-              map.removeLayer(layer);
-            }
-          });
-          baseMaps[nome].addTo(map);
-        };
-
-        // Grupo de clusters
-        let markersCluster = L.markerClusterGroup(
-                                  {
-                                    spiderfyOnEveryZoom: false, // não fechar ao dar zoom
-                                    removeOutsideVisibleBounds: false, // mantém clusters fora da área visível
-                                    disableClusteringAtZoom: null, // mantém agrupamento
-                                                                  maxClusterRadius: function (zoom) {
-                                            return zoom < 10 ? precisaoAgrupamentoMaximo: precisaoAgrupamentoMinimo;
-
-                                                                      }
-                                  
-                                }
-                                );
-
-        // Array para armazenar coordenadas das casas
-        let poligonoRecinto = []; 
-        let poligonoAreaVeiculo = []; 
-        let poligonoAreaLote = []; 
-        let poligonoAreaCargaSolta = [];     
-        let poligonoAreaConteiner = []; 
-        let poligonoConferencia = []; 
-        let poligonoPorteiner = [];     
-
-
-        for (let ix = 0; ix < pontos.length; ix++) {  
-       
-          let p = pontos[ix]
-          
-          if(p.Ativo != 'true') continue
-   
-
-          //Validar se é ponto ou área
-          //Ponto não pode ter polígono no p.Tipo
-          let indPoligono = p.Tipo.search('polígono') >=0 ? true : false
-
-          let iconURL = getIcone(p.Tipo,p.Azimute)
-
-          const customIcon = L.icon({
-            iconUrl: iconURL,
-            iconSize: [32, 32],
-            iconAnchor: [16, 32],
-            popupAnchor: [0, -32]
+              const reader = new FileReader();
+              reader.onload = () => {
+                pontos = csvParaJson(reader.result);
+                console.log("CSV convertido em JSON:", pontos);
+                usarPontos();
+                event.target.value = ""; // limpa para permitir re-seleção
+              };
+              reader.readAsText(arquivo);
             });
-              
-          latitude  = ''
-          longitude = ''
+            //Popup seletor de tipo de mapa. Aparece no canto superior direito
+            const MapSelector = L.Control.extend({
+              options: { position: "topright" },
+              onAdd: function () {
+                const container = L.DomUtil.create("div", "leaflet-bar leaflet-control leaflet-control-custom");
 
-          if(indPoligono) {
-      
+                container.innerHTML = `
+                  <img src="https://cdn-icons-png.flaticon.com/512/854/854878.png" 
+                      alt="map icon" style="width:24px;height:24px;">
+                `;
 
-              let arrayLatitude = p.Latitude.split(' - ')
-              let arrayLongitude = p.Longitude.split(' - ')
+                // estilo de botão 3D
+                container.style.background = "linear-gradient(180deg, #2196F3, #1565C0)"; // azul com gradiente
+                container.style.border = "1px solid #0D47A1";
+                container.style.borderRadius = "6px";
+                container.style.cursor = "pointer";
+                container.style.padding = "5px";
+                container.style.boxShadow = "0 4px #0D47A1"; // sombra sólida abaixo
+                container.style.transition = "all 0.2s ease";
 
-              let ultimaLatitude  = getCoordenada(arrayLatitude[0]); 
-              let UltimaLongitude = getCoordenada(arrayLongitude[0]) ;         
-              for (let lx = 0; lx < arrayLatitude.length; lx++) {  
+                // efeito ao clicar
+                container.onmousedown = function () {
+                  container.style.boxShadow = "0 2px #0D47A1";
+                  container.style.transform = "translateY(2px)";
+                };
+                container.onmouseup = function () {
+                  container.style.boxShadow = "0 4px #0D47A1";
+                  container.style.transform = "translateY(0)";
+                };
 
-                  if (p.Tipo.search('Recinto')>=0) { 
-                      poligonoRecinto.push([getCoordenada(arrayLatitude[lx]) , getCoordenada(arrayLongitude[lx])]);
-                      //Para fechar o polígono
-                      if(lx + 1 === arrayLatitude.length) {
-                         poligonoRecinto.push([ultimaLatitude, UltimaLongitude]);
-                      }
-                  }
-                  if (p.Tipo.search('veículos')>=0) { 
-                      
-                      poligonoAreaVeiculo.push([getCoordenada(arrayLatitude[lx]) , getCoordenada(arrayLongitude[lx])]);
-                      //Para fechar o polígono
-                      if(lx + 1 === arrayLatitude.length) {
-                         poligonoAreaVeiculo.push([ultimaLatitude, UltimaLongitude]);                        
-                         poligonoAreaVeiculo.push([getCoordenada(arrayLatitude[0]) , getCoordenada(arrayLongitude[0])]);
-                      }                        
+                // Evita que o clique no controle arraste o mapa
+                L.DomEvent.disableClickPropagation(container);
 
-                  }                       
-                  if (p.Tipo.search('lotes')>=0){ 
-                     poligonoAreaLote.push([getCoordenada(arrayLatitude[lx]) , getCoordenada(arrayLongitude[lx])]);
-                      //Para fechar o polígono
-                      if(lx + 1 === arrayLatitude.length) {
-                         poligonoAreaLote.push([ultimaLatitude, UltimaLongitude]);                        
-                         
-                      }                     
-           
-                  }                          
-                  if (p.Tipo.search('conferência física')>=0) { 
-                 
-                     poligonoConferencia.push([getCoordenada(arrayLatitude[lx]) , getCoordenada(arrayLongitude[lx])]);
-                      //Para fechar o polígono
-                      if(lx + 1 === arrayLatitude.length) {
-                         poligonoConferencia.push([ultimaLatitude, UltimaLongitude]);                        
-                         
-                      }                       
- 
-                  }                                           
-                  if (p.Tipo.search('contêineres')>=0) {                 
-                      poligonoAreaConteiner.push([getCoordenada(arrayLatitude[lx]) , getCoordenada(arrayLongitude[lx])]);
-                      //Para fechar o polígono
-                      if(lx + 1 === arrayLatitude.length) {
-                         poligonoAreaConteiner.push([ultimaLatitude, UltimaLongitude]);                        
-                        
-                      }
+                // Ao clicar, abre popup com opções
+                container.onclick = function () {
+                  let html = "<b>Selecione o mapa:</b><br>";
+                  Object.keys(baseMaps).forEach(nome => {
+                    const icon = baseMapIcons[nome] || "🗺️"; // fallback
+                    html += `<div style="cursor:pointer; margin:3px; color:blue;" 
+                              onclick="window.setBaseMap('${nome}')">${icon} ${nome}</div>`;
+                  });
+                  L.popup()
+                    .setLatLng(map.getCenter())
+                    .setContent(html)
+                    .openOn(map);
+                };
 
-                  }                                         
-                        
-                  if (p.Tipo.search('carga solta')>=0) { 
-                      poligonoAreaCargaSolta.push([getCoordenada(arrayLatitude[lx]) , getCoordenada(arrayLongitude[lx])]);
-                      //Para fechar o polígono
-                      if(lx + 1 === arrayLatitude.length) {
-                         poligonoAreaCargaSolta.push([ultimaLatitude, UltimaLongitude]);                        
-                        
-                      }                      
-
-                  }                                             
-                      
-                  if (p.Tipo.search('Portêiner')>=0) { 
-                  
-                    poligonoPorteiner.push([getCoordenada(arrayLatitude[lx]) , getCoordenada(arrayLongitude[lx])]);
-                      //Para fechar o polígono
-                      if(lx + 1 === arrayLatitude.length) {
-                         poligonoPorteiner.push([ultimaLatitude, UltimaLongitude]);                        
-                        
-                      }                         
-                                            
-                  }     
-                    
-                    
-
-
-
+                return container;
               }
-
-          } 
-          if(!indPoligono) { 
-              if(p.Latitude === '') continue; 
-              latitude = parseFloat(getCoordenada(getPrimeiraOcorrencia(p.Latitude)));
-              longitude = parseFloat(getCoordenada(getPrimeiraOcorrencia(p.Longitude)));
-              let azimute = p.Azimute ? p.Azimute : 0.
-             // if(typeof latitude === 'string') latitude = parseFloat(latitude)
-             // if(typeof longitude === 'string') longitude = parseFloat(longitude) 
- 
-              // Marker com popup contendo texto + gráfico
-              let marker = L.marker([latitude, longitude], { icon: customIcon })
-                .bindPopup(() => {
-                  // conteúdo textual
-                  const div = document.createElement("div");
-                  
-                  div.innerHTML = `
-                    <ul style="padding-left: 15px; margin: 0;">
-                      <li><strong>${p.Equipamento}</strong></li>
-                      <li>Azimute: ${azimute}</li>                      
-                      <li>Latitude: ${(parseFloat(getCoordenada(getPrimeiraOcorrencia(p.Latitude))))}</li>
-                      <li>Longitude: ${(parseFloat(getCoordenada(getPrimeiraOcorrencia(p.Longitude))))}</li>
-
-                    </ul>
-                  `;
-                  // adiciona gráfico de azimute (exemplo: 45°)
-                  div.appendChild(gerarGraficoAzimute(azimute));
-                  return div;
-                });
-
-            markersCluster.addLayer(marker);
-
-
+            });
             
-          }
-        }
+            map.addControl(new MapSelector());
 
-        map.addLayer(markersCluster);
+            // Função global para trocar mapa base
+            window.setBaseMap = function (nome) {
+              map.eachLayer(layer => {
+                if (layer instanceof L.TileLayer) {
+                  map.removeLayer(layer);
+                }
+              });
+              baseMaps[nome].addTo(map);
+            };
 
-        // JSON com array de 5 itens
-        const rodapeInfo = [
-          { titulo: "Área:", icone: "", cor: 'navy' },                   
-          { titulo: "Recinto", icone: "", cor: 'navy' },
-          { titulo: "Carga Solta", icone: "" , cor: 'purple'},      
-          { titulo: "Conferência", icone: "" , cor: 'orange'},
-          { titulo: "Contêiner", icone: "", cor: 'red' },
-          { titulo: "Lote", icone: "" , cor: 'green'},          
-          { titulo: "Portêiner", icone: "" , cor: 'black'},         
-  
-          { titulo: "Veículo", icone: "" , cor: 'darkcyan'}
-        ];
+            // Grupo de clusters
+            let markersCluster = L.markerClusterGroup(
+                                      {
+                                        spiderfyOnEveryZoom: false, // não fechar ao dar zoom
+                                        removeOutsideVisibleBounds: false, // mantém clusters fora da área visível
+                                        disableClusteringAtZoom: null, // mantém agrupamento
+                                                                      maxClusterRadius: function (zoom) {
+                                                return zoom < 10 ? precisaoAgrupamentoMaximo: precisaoAgrupamentoMinimo;
 
+                                                                          }
+                                      
+                                    }
+                                    );
+
+            // Array para armazenar coordenadas das casas
+            let poligonoRecinto = []; 
+            let poligonoAreaVeiculo = []; 
+            let poligonoAreaLote = []; 
+            let poligonoAreaCargaSolta = [];     
+            let poligonoAreaConteiner = []; 
+            let poligonoConferencia = []; 
+            let poligonoPorteiner = [];     
+
+
+            for (let ix = 0; ix < pontos.length; ix++) {  
+          
+              let p = pontos[ix]
+              
+              if(p.Ativo != 'true') continue
       
 
+              //Validar se é ponto ou área
+              //Ponto não pode ter polígono no p.Tipo
+              let indPoligono = p.Tipo.search('polígono') >=0 ? true : false
 
-        // Polígono do Recinto
+              let iconURL = getIcone(p.Tipo,p.Azimute)
 
-        if (poligonoRecinto.length >= 1) {
+              const customIcon = L.icon({
+                iconUrl: iconURL,
+                iconSize: [32, 32],
+                iconAnchor: [16, 32],
+                popupAnchor: [0, -32]
+                });
+                  
+              latitude  = ''
+              longitude = ''
+
+              if(indPoligono) {
+          
+
+                  let arrayLatitude = p.Latitude.split(' - ')
+                  let arrayLongitude = p.Longitude.split(' - ')
+
+                  let ultimaLatitude  = getCoordenada(arrayLatitude[0]); 
+                  let UltimaLongitude = getCoordenada(arrayLongitude[0]) ;         
+                  for (let lx = 0; lx < arrayLatitude.length; lx++) {  
+
+                      if (p.Tipo.search('Recinto')>=0) { 
+                          poligonoRecinto.push([getCoordenada(arrayLatitude[lx]) , getCoordenada(arrayLongitude[lx])]);
+                          //Para fechar o polígono
+                          if(lx + 1 === arrayLatitude.length) {
+                            poligonoRecinto.push([ultimaLatitude, UltimaLongitude]);
+                          }
+                      }
+                      if (p.Tipo.search('veículos')>=0) { 
+                          
+                          poligonoAreaVeiculo.push([getCoordenada(arrayLatitude[lx]) , getCoordenada(arrayLongitude[lx])]);
+                          //Para fechar o polígono
+                          if(lx + 1 === arrayLatitude.length) {
+                            poligonoAreaVeiculo.push([ultimaLatitude, UltimaLongitude]);                        
+                            poligonoAreaVeiculo.push([getCoordenada(arrayLatitude[0]) , getCoordenada(arrayLongitude[0])]);
+                          }                        
+
+                      }                       
+                      if (p.Tipo.search('lotes')>=0){ 
+                        poligonoAreaLote.push([getCoordenada(arrayLatitude[lx]) , getCoordenada(arrayLongitude[lx])]);
+                          //Para fechar o polígono
+                          if(lx + 1 === arrayLatitude.length) {
+                            poligonoAreaLote.push([ultimaLatitude, UltimaLongitude]);                        
+                            
+                          }                     
+              
+                      }                          
+                      if (p.Tipo.search('conferência física')>=0) { 
+                    
+                        poligonoConferencia.push([getCoordenada(arrayLatitude[lx]) , getCoordenada(arrayLongitude[lx])]);
+                          //Para fechar o polígono
+                          if(lx + 1 === arrayLatitude.length) {
+                            poligonoConferencia.push([ultimaLatitude, UltimaLongitude]);                        
+                            
+                          }                       
+    
+                      }                                           
+                      if (p.Tipo.search('contêineres')>=0) {                 
+                          poligonoAreaConteiner.push([getCoordenada(arrayLatitude[lx]) , getCoordenada(arrayLongitude[lx])]);
+                          //Para fechar o polígono
+                          if(lx + 1 === arrayLatitude.length) {
+                            poligonoAreaConteiner.push([ultimaLatitude, UltimaLongitude]);                        
+                            
+                          }
+
+                      }                                         
+                            
+                      if (p.Tipo.search('carga solta')>=0) { 
+                          poligonoAreaCargaSolta.push([getCoordenada(arrayLatitude[lx]) , getCoordenada(arrayLongitude[lx])]);
+                          //Para fechar o polígono
+                          if(lx + 1 === arrayLatitude.length) {
+                            poligonoAreaCargaSolta.push([ultimaLatitude, UltimaLongitude]);                        
+                            
+                          }                      
+
+                      }                                             
+                          
+                      if (p.Tipo.search('Portêiner')>=0) { 
+                      
+                        poligonoPorteiner.push([getCoordenada(arrayLatitude[lx]) , getCoordenada(arrayLongitude[lx])]);
+                          //Para fechar o polígono
+                          if(lx + 1 === arrayLatitude.length) {
+                            poligonoPorteiner.push([ultimaLatitude, UltimaLongitude]);                        
+                            
+                          }                         
+                                                
+                      }     
+                        
+                        
+
+
+
+                  }
+
+              } 
+              if(!indPoligono) { 
+                  if(p.Latitude === '') continue; 
+                  latitude = parseFloat(getCoordenada(getPrimeiraOcorrencia(p.Latitude)));
+                  longitude = parseFloat(getCoordenada(getPrimeiraOcorrencia(p.Longitude)));
+                  let azimute = p.Azimute ? p.Azimute : 0.
+                // if(typeof latitude === 'string') latitude = parseFloat(latitude)
+                // if(typeof longitude === 'string') longitude = parseFloat(longitude) 
+    
+                  // Marker com popup contendo texto + gráfico
+                  let marker = L.marker([latitude, longitude], { icon: customIcon })
+                    .bindPopup(() => {
+                      // conteúdo textual
+                      const div = document.createElement("div");
+                      
+                      div.innerHTML = `
+                        <ul style="padding-left: 15px; margin: 0;">
+                          <li><strong>${p.Tipo}</strong></li>
+                          <li>${p.Equipamento}</li>
+                          <li>Azimute: ${azimute}</li>                      
+                          <li>Latitude: ${(parseFloat(getCoordenada(getPrimeiraOcorrencia(p.Latitude))))}</li>
+                          <li>Longitude: ${(parseFloat(getCoordenada(getPrimeiraOcorrencia(p.Longitude))))}</li>
+
+                        </ul>
+                      `;
+                      // adiciona gráfico de azimute (exemplo: 45°)
+                      div.appendChild(gerarGraficoAzimute(azimute));
+                      return div;
+                    });
+
+                markersCluster.addLayer(marker);
+
+
+                
+              }
+            }
+
+            map.addLayer(markersCluster);
+
+            // JSON com array de 5 itens
+            const rodapeInfo = [
+              { titulo: "Área:", icone: "", cor: 'navy' },                   
+              { titulo: "Recinto", icone: "", cor: 'navy' },
+              { titulo: "Carga Solta", icone: "" , cor: 'purple'},      
+              { titulo: "Conferência", icone: "" , cor: 'orange'},
+              { titulo: "Contêiner", icone: "", cor: 'red' },
+              { titulo: "Lote", icone: "" , cor: 'green'},          
+              { titulo: "Portêiner", icone: "" , cor: 'black'},         
       
-          L.polyline(poligonoRecinto, {
-            color: rodapeInfo[1].cor,   // ✅ acesso direto
-            weight: 2,                  // espessura
-            opacity: 0.8                // transparência
-            // dashArray: '10, 10'      // tracejada (10px traço, 10px espaço)
-          }).addTo(map);
-        }
-        // Área de posicionamento de veículos (polígono)
-        if (poligonoAreaVeiculo.length >= 1) {
-           
-          L.polygon(poligonoAreaVeiculo, {
-            color: rodapeInfo[7].cor,       // cor da linha
-            weight: 2,          // espessura
-            opacity: 0.6,       // transparência
-          // dashArray: '10, 10' // tracejada (10px traço, 10px espaço)
-          }).addTo(map);
-        }
-        // Área de posicionamento de Lotes
-        if (poligonoAreaLote.length >=1) {
+              { titulo: "Veículo", icone: "" , cor: 'darkcyan'}
+            ];
+
           
-          L.polygon(poligonoAreaLote, {
-            color: rodapeInfo[5].cor,       // cor da linha
-            weight: 2,          // espessura
-            opacity: 0.6,       // transparência
-          // dashArray: '10, 10' // tracejada (10px traço, 10px espaço)
-          }).addTo(map);
-        }
-        // Área de posicionamento de poligonoAreaCargaSolta
-        if (poligonoAreaCargaSolta.length >= 1) {
-           
-          L.polygon(poligonoAreaCargaSolta, {
-            color: rodapeInfo[2].cor,       // cor da linha
-            weight: 2,          // espessura
-            opacity: 0.6,       // transparência
-          // dashArray: '10, 10' // tracejada (10px traço, 10px espaço)
-          }).addTo(map);
-        }
-        // Área de posicionamento de poligonoAreaConteiner
-        if (poligonoAreaConteiner.length >= 1) {
+
+
+            // Polígono do Recinto
+
+            if (poligonoRecinto.length >= 1) {
           
-          L.polygon(poligonoAreaConteiner, {
-            color: rodapeInfo[4].cor,       // cor da linha
-            weight: 2,          // espessura
-            opacity: 0.6,       // transparência
-          // dashArray: '10, 10' // tracejada (10px traço, 10px espaço)
-          }).addTo(map);
-        }   
-        // Área de posicionamento de poligonoConferencia
-        if (poligonoConferencia.length >= 1) {
-           
-          L.polygon(poligonoConferencia, {
-            color: rodapeInfo[3].cor,      // cor da linha
-            weight: 2,          // espessura
-            opacity: 0.6,       // transparência
-          // dashArray: '10, 10' // tracejada (10px traço, 10px espaço)
-          }).addTo(map);
-        }  
-        // Área de posicionamento de poligonoPorteiner
-        if (poligonoPorteiner.length >= 1) {
-           
-          L.polygon(poligonoPorteiner, {
-            color: rodapeInfo[6].cor,      // cor da linha
-            weight: 2,          // espessura
-            opacity: 0.6,       // transparência
-          // dashArray: '10, 10' // tracejada (10px traço, 10px espaço)
-          }).addTo(map);
-        }     
+              L.polyline(poligonoRecinto, {
+                color: rodapeInfo[1].cor,   // ✅ acesso direto
+                weight: 2,                  // espessura
+                opacity: 0.8                // transparência
+                // dashArray: '10, 10'      // tracejada (10px traço, 10px espaço)
+              }).addTo(map);
+            }
+            // Área de posicionamento de veículos (polígono)
+            if (poligonoAreaVeiculo.length >= 1) {
+              
+              L.polygon(poligonoAreaVeiculo, {
+                color: rodapeInfo[7].cor,       // cor da linha
+                weight: 2,          // espessura
+                opacity: 0.6,       // transparência
+              // dashArray: '10, 10' // tracejada (10px traço, 10px espaço)
+              }).addTo(map);
+            }
+            // Área de posicionamento de Lotes
+            if (poligonoAreaLote.length >=1) {
+              
+              L.polygon(poligonoAreaLote, {
+                color: rodapeInfo[5].cor,       // cor da linha
+                weight: 2,          // espessura
+                opacity: 0.6,       // transparência
+              // dashArray: '10, 10' // tracejada (10px traço, 10px espaço)
+              }).addTo(map);
+            }
+            // Área de posicionamento de poligonoAreaCargaSolta
+            if (poligonoAreaCargaSolta.length >= 1) {
+              
+              L.polygon(poligonoAreaCargaSolta, {
+                color: rodapeInfo[2].cor,       // cor da linha
+                weight: 2,          // espessura
+                opacity: 0.6,       // transparência
+              // dashArray: '10, 10' // tracejada (10px traço, 10px espaço)
+              }).addTo(map);
+            }
+            // Área de posicionamento de poligonoAreaConteiner
+            if (poligonoAreaConteiner.length >= 1) {
+              
+              L.polygon(poligonoAreaConteiner, {
+                color: rodapeInfo[4].cor,       // cor da linha
+                weight: 2,          // espessura
+                opacity: 0.6,       // transparência
+              // dashArray: '10, 10' // tracejada (10px traço, 10px espaço)
+              }).addTo(map);
+            }   
+            // Área de posicionamento de poligonoConferencia
+            if (poligonoConferencia.length >= 1) {
+              
+              L.polygon(poligonoConferencia, {
+                color: rodapeInfo[3].cor,      // cor da linha
+                weight: 2,          // espessura
+                opacity: 0.6,       // transparência
+              // dashArray: '10, 10' // tracejada (10px traço, 10px espaço)
+              }).addTo(map);
+            }  
+            // Área de posicionamento de poligonoPorteiner
+            if (poligonoPorteiner.length >= 1) {
+              
+              L.polygon(poligonoPorteiner, {
+                color: rodapeInfo[6].cor,      // cor da linha
+                weight: 2,          // espessura
+                opacity: 0.6,       // transparência
+              // dashArray: '10, 10' // tracejada (10px traço, 10px espaço)
+              }).addTo(map);
+            }     
 
-        //Abre os pontos de um cluster
-        
-      markersCluster.on('clusterclick', function (a) {
-        a.layer.spiderfy(); // abre o cluster
-        a.originalEvent.preventDefault(); // evita comportamento padrão
-      });
-
-
-        markersCluster.on('clusteringend', function () {
-          markersCluster.getLayers().forEach(layer => {
-            if (layer.spiderfy) layer.spiderfy();
+            //Abre os pontos de um cluster
+            
+          markersCluster.on('clusterclick', function (a) {
+            a.layer.spiderfy(); // abre o cluster
+            a.originalEvent.preventDefault(); // evita comportamento padrão
           });
-        });
-
-        // Controle personalizado
-        const footer = L.control({position: 'bottomleft'});
-        footer.onAdd = function () {
-          const div = L.DomUtil.create('div', 'map-footer');
-          div.innerHTML = rodapeInfo.map(item => `
-            <div class="map-footer-item" style="color:${item.cor};">
-              <span><strong>${item.titulo}</strong></span>
-            </div>
-          `).join("");
-          return div;
-        };
-
-        footer.addTo(map);  
 
 
-        // Ajusta o zoom para mostrar tudo
-        map.fitBounds(markersCluster.getBounds(), { padding: [30, 30] });
-  }
+            markersCluster.on('clusteringend', function () {
+              markersCluster.getLayers().forEach(layer => {
+                if (layer.spiderfy) layer.spiderfy();
+              });
+            });
+
+            // Controle personalizado
+            const footer = L.control({position: 'bottomleft'});
+            footer.onAdd = function () {
+              const div = L.DomUtil.create('div', 'map-footer');
+              div.innerHTML = rodapeInfo.map(item => `
+                <div class="map-footer-item" style="color:${item.cor};">
+                  <span><strong>${item.titulo}</strong></span>
+                </div>
+              `).join("");
+              return div;
+            };
+
+            footer.addTo(map);  
+
+
+            // Ajusta o zoom para mostrar tudo
+            map.fitBounds(markersCluster.getBounds(), { padding: [30, 30] });
+        }
  
 
 </script> 
 
-  <script>
-/*
-    let geoPloter = null;
-   
-    (async () => {
-      geoPloter = await lerDoStorage("ploter");
-      inicializarMapa(geoPloter)
-    })();
-*/   
-
-  
- 
- </script>
 </body>
 </html>
