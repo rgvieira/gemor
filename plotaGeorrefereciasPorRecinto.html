@@ -212,7 +212,7 @@
           let arrayIcones = [
                               {tipo: "Balança (ponto)" , url: "escala-industrial.png",icone:"https://cdn-icons-png.flaticon.com/512/8248/8248483.png" },
                               {tipo: "Catraca e similares (ponto)", url: "torniquetes.png",icone:"https://cdn-icons-png.flaticon.com/512/3205/3205227.png" },
-                              {tipo: "Câmera (ponto)", url: "camera-ctv.png",icone: "https://cdn-icons-png.flaticon.com/512/10682/10682215.png"},
+                              {tipo: "Câmera (ponto)", url: "camera-ctv.png",icone: "https://cdn-icons-png.flaticon.com/512/5081/5081518.png"},
                               {tipo: "Portão, gate e similares (ponto)", url: "boom_gate2.png",icone:"https://cdn-icons-png.flaticon.com/512/4999/4999239.png" },
                               {tipo: "Portêiner (ponto)", url: "portainer.png",icone: "https://cdn-icons-png.flaticon.com/512/11860/11860966.png"},
                               {tipo: "Portêiner, Shiploader ou similares (ponto/polígono)", url: "portainer.png",icone: "https://cdn-icons-png.flaticon.com/512/11387/11387319.png"},
@@ -246,7 +246,7 @@
             //Se for câmera e não há azimute, entendemos ser câmera dome
             //Retornar endereço do ícone de uma dome  
             if(icone.search('Câmera')>=0 && !azimute)
-               retorno = 'https://cdn-icons-png.flaticon.com/512/9716/9716309.png';
+               retorno = 'https://cdn-icons-png.flaticon.com/512/10005/10005664.png';
             return retorno;   
        }
 
@@ -442,39 +442,7 @@
 
         // Define o título
         document.getElementById("map-title").innerHTML = nomeRecinto + ': ' + codRecinto; 
-/*
-        //Controle personalizado com ícone de imagem
-        const MapSelector = L.Control.extend({
-          options: { position: "topright" },
-          onAdd: function () {
-            const container = L.DomUtil.create("div", "leaflet-bar leaflet-control leaflet-control-custom");
-            container.innerHTML = `<img src="https://cdn-icons-png.flaticon.com/512/854/854878.png" 
-                                    alt="map icon" style="width:24px;height:24px;">`;
-            container.style.backgroundColor = "white";
-            container.style.cursor = "pointer";
-            container.style.padding = "5px";
 
-            // Evita que o clique no controle arraste o mapa
-            L.DomEvent.disableClickPropagation(container);
-
-            // Ao clicar, abre popup com opções
-            container.onclick = function () {
-              let html = "<b>Selecione o mapa:</b><br>";
-              Object.keys(baseMaps).forEach(nome => {
-                const icon = baseMapIcons[nome] || "🗺️"; // fallback
-                html += `<div style="cursor:pointer; margin:3px; color:blue;" 
-                          onclick="window.setBaseMap('${nome}')">${icon} ${nome}</div>`;
-              });
-              L.popup()
-                .setLatLng(map.getCenter())
-                .setContent(html)
-                .openOn(map);
-            };
-            return container;
-          }
-        });
-
-*/
 
         // cria controle de upload dentro do mapa
         const UploadControl = L.Control.extend({
