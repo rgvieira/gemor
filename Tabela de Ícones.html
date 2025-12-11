@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Tabela dinâmica de ícones</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+    th { background: #f5f5f5; }
+    .preview { width: 48px; height: 48px; object-fit: contain; }
+    .url { font-family: Consolas, monospace; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <h1>Tabela dinâmica de ícones (JSON → HTML)</h1>
+  <table id="iconTable">
+    <thead>
+      <tr>
+        <th>Nº</th>
+        <th>Ícone</th>
+        <th>Endereço (URL)</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    // JSON com os endereços dos ícones
+    const iconsJson = [
+      { url: "https://cdn-icons-png.flaticon.com/128/684/684908.png" },
+      { url: "https://cdn-icons-png.flaticon.com/512/11387/11387319.png" },
+      { url: "https://cdn-icons-png.flaticon.com/512/11860/11860966.png" },
+      { url: "https://cdn-icons-png.flaticon.com/512/1254/1254256.png "  },
+      { url: "https://cdn-icons-png.flaticon.com/512/10203/10203715.png"  },
+      { url: "https://cdn-icons-png.flaticon.com/512/14658/14658237.png" },
+      { url: "https://cdn-icons-png.flaticon.com/512/8397/8397505.png " },
+      { url: "https://cdn-icons-png.flaticon.com/512/8954/8954694.png"  },
+      { url: "https://cdn-icons-png.flaticon.com/512/8248/8248483.png" },
+      { url: 'https://cdn-icons-png.flaticon.com/512/89/89964.png'}, //10
+      { url: "https://cdn-icons-png.flaticon.com/512/8346/8346292.png"},
+      { url: "https://cdn-icons-png.flaticon.com/512/4829/4829645.png"},
+      { url: "https://cdn-icons-png.flaticon.com/512/4829/4829649.png"},
+      { url: "https://cdn-icons-png.flaticon.com/512/754/754877.png"},
+      { url: "https://cdn-icons-png.flaticon.com/512/3165/3165829.png"},
+      { url: "https://cdn-icons-png.flaticon.com/512/2821/2821904.png"},
+      { url: "https://cdn-icons-png.flaticon.com/512/16355/16355158.png"},
+      { url: "https://cdn-icons-png.flaticon.com/512/1185/1185509.png"},
+      { url: "https://cdn-icons-png.flaticon.com/512/3205/3205227.png "},
+      { url: "https://cdn-icons-png.flaticon.com/512/2050/2050383.png"}, //20
+      { url: "https://cdn-icons-png.flaticon.com/512/13869/13869228.png"},
+      { url: "https://cdn-icons-png.flaticon.com/512/4652/4652615.png"},
+      { url: "https://cdn-icons-png.flaticon.com/512/9716/9716571.png"},
+      { url: "https://cdn-icons-png.flaticon.com/512/10682/10682215.png"}, //24
+      { url: "https://cdn-icons-png.flaticon.com/512/10073/10073813.png"},
+      { url: "https://cdn-icons-png.flaticon.com/512/5081/5081518.png"},
+      { url: "https://cdn-icons-png.flaticon.com/512/10005/10005664.png"},      
+      { url: "https://cdn-icons-png.flaticon.com/512/9716/9716309.png"},
+      { url: "https://cdn-icons-png.flaticon.com/512/4999/4999239.png"},
+      { url: "https://cdn-icons-png.flaticon.com/512/4999/4999238.png"},
+      { url: "https://cdn-icons-png.flaticon.com/512/2078/2078261.png"},
+      { url: "https://cdn-icons-png.flaticon.com/512/5612/5612970.png"},
+      { url: "https://cdn-icons-png.flaticon.com/512/5755/5755651.png"},
+      { url: "https://cdn-icons-png.flaticon.com/512/2311/2311340.png"},
+     
+      { url: ""},
+
+    ];
+
+    // Monta a tabela dinamicamente
+    const tbody = document.querySelector("#iconTable tbody");
+
+    iconsJson.forEach((icon, index) => {
+      const tr = document.createElement("tr");
+
+      // Coluna do número do item
+      const tdNum = document.createElement("td");
+      tdNum.textContent = index + 1; // começa em 1
+      tr.appendChild(tdNum);
+
+      // Coluna do ícone
+      const tdIcon = document.createElement("td");
+      const img = document.createElement("img");
+      img.src = icon.url;
+      img.className = "preview";
+      tdIcon.appendChild(img);
+      tr.appendChild(tdIcon);
+
+      // Coluna da URL
+      const tdUrl = document.createElement("td");
+      tdUrl.textContent = icon.url;
+      tdUrl.className = "url";
+      tr.appendChild(tdUrl);
+
+      tbody.appendChild(tr);
+    });
+  </script>
+</body>
+</html>
