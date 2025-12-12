@@ -93,8 +93,13 @@
       border-radius: 4px;
     }
    #uploadIcon {
+      position: fixed;   /* fixa na tela */
       display: inline-block;
       cursor: pointer;
+      top: 20px; 
+      right: 20px;       /* distância da direita */
+    
+      text-align: center;
     }
     #uploadIcon svg {
       width: 32px;
@@ -220,6 +225,7 @@
 
        function getArrayIcones() {
           let arrayIcones = [
+                              {tipo: "Recinto (ponto)" , url: "escala-industrial.png",icone:"https://cdn-icons-png.flaticon.com/128/684/684908.png" },
                               {tipo: "Balança (ponto)" , url: "escala-industrial.png",icone:"https://cdn-icons-png.flaticon.com/512/8248/8248483.png" },
                               {tipo: "Catraca e similares (ponto)", url: "torniquetes.png",icone:"https://cdn-icons-png.flaticon.com/512/1185/1185509.png" },
                               {tipo: "Câmera (ponto)", url: "camera-ctv.png",icone: "https://cdn-icons-png.flaticon.com/512/10073/10073813.png"},
@@ -369,17 +375,27 @@
           if(typeof coordenada === 'string') coordenada = parseFloat(coordenada)
           return coordenada;
         }
-
+        function contarRecintos(pontos) {
+            let contador = 0;
+            for (let ix = 0; ix < pontos.length; ix++) {
+              if (pontos[ix].Tipo && pontos[ix].Tipo.search('Recinto') !== -1) {
+                contador++;
+              }
+            }
+            return contador;
+        }
         function plotarPontosMapa(pontos) {
 
             // ✅ esconder input e label após leitura
             document.getElementById("fileCSV").style.display = "none";
             document.getElementById("uploadIcon").style.display = "none";
             //Recinto - Dados devem ser passados 
+            
             let nomeRecinto = pontos[0].NomeRecinto;
             let latitudeRecinto = pontos[0].LatitudeRecinto;
             let longitudeRecinto = pontos[0].LongitudeRecinto;
             let codRecinto = pontos[0].CódigoRecinto;
+            
             // Mapas base gratuitos
             const baseMaps = {
               "OpenStreetMap": L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -460,10 +476,6 @@
                 .setContent(container)
                 .openOn(map);
             });
-
-
-           
-
 
             // cria controle de upload dentro do mapa
             const UploadControl = L.Control.extend({
@@ -581,7 +593,9 @@
             let poligonoAreaConteiner = []; 
             let poligonoConferencia = []; 
             let poligonoPorteiner = [];     
-
+            //Conta quantos Recintos há em pontos
+            let qtdRecintos = contarRecintos(pontos);   
+                            
             //Percorre a tabela de ativos                          
             for (let ix = 0; ix < pontos.length; ix++) {  
           
@@ -691,16 +705,19 @@
                   let azimute = p.Azimute ? p.Azimute : 0.
 
                   //Marco Zero - Recinto
-                  if(p.Tipo.search('Recinto')>=0) {
-                     // Define o título da página
-                     document.getElementById("map-title").innerHTML = p.Equipamento;                      
-                     //var markers = L.markerClusterGroup();
-                     var markers = L.markerClusterGroup();
-                     markers.addLayer(L.marker([latitude, longitude]).bindPopup(p.Equipamento));
-                     map.addLayer(markers);
-                     continue;
+                  if(qtdRecintos===1) {
+                      // Define o título da página
+                      document.getElementById("map-title").innerHTML = p.Equipamento; 
+                  }
+                    if(p.Tipo.search('Recinto')>=0) {
+                     
+                      //var markers = L.markerClusterGroup();
+                      var markers = L.markerClusterGroup();
+                      markers.addLayer(L.marker([latitude, longitude]).bindPopup(p.Equipamento));
+                      map.addLayer(markers);
+                      continue;
 
-                  }   
+                    }   
                   //Se for câmera e houver azimute
                   if(p.Tipo.search('Câmera') >=0 && p.Azimute ){
                       // Usa a função para obter coordenadas e desenhar no mapa
