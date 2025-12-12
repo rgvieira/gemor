@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>Exemplo Modal Dinâmico</title>
+  <style>
+    body { font-family: Inter, sans-serif; margin:0; padding:20px; background:#0f172a; color:#e5e7eb; }
+    .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+    .card { border:1px solid #1f2937; border-radius:16px; background:#111827; padding:18px; }
+    .card h3 { margin:4px 0 8px; font-size:18px; font-weight:600; }
+        .link {
+      display: inline-flex; align-items: center; gap: 8px; text-decoration: none;
+      color: var(--text); background: linear-gradient(180deg, rgba(59,130,246,0.18), rgba(59,130,246,0.34));
+      border: 1px solid rgba(59,130,246,0.4); padding: 10px 14px; border-radius: 12px;
+      font-weight: 600; box-shadow: 0 8px 20px rgba(59,130,246,0.22);
+    }
+    .link svg { width: 16px; height: 16px; }
+    .extra-text { display: none; margin-top: 10px; color: var(--muted); font-size: 14px; line-height: 1.6; }
+    footer { margin-top: 36px; padding-top: 18px; border-top: 1px solid var(--border); color: var(--muted); font-size: 13px; text-align: center; }
+    button.toggle {
+      background: var(--accent); color: #fff; border: none; padding: 8px 12px;
+      border-radius: 8px; cursor: pointer; font-weight: 600;
+    }
+    .desc { color:#9ca3af; font-size:14.5px; line-height:1.6; }
+    .toggle { background:#3b82f6; color:#fff; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600; }
+    .modal { display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background-color:rgba(0,0,0,0.5); }
+    .modal-content { background:#fff; color:#333; margin:10% auto; padding:20px; border-radius:8px; width:80%; max-width:600px; line-height:1.6; }
+  </style>
+</head>
+<body>
+  <section class="grid">
+    <article class="card">
+      <h3>Georreferenciamento</h3>
+        <a class="link" href="plotaGeorrefereciasPorRecinto.html" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 4l8 8-1.41 1.41L13 8.83V20h-2V8.83l-5.59 5.58L4 12l8-8z"/></svg>
+          Mapa dos Ativos
+        </a>      
+        <p class="desc">Mapeamento de ativos de recinto aduaneiro (câmeras, catracas, balanças, áreas de armazenagem, etc). Obtenha previamente o arquivo csv com as coordenadas do recinto.</p>
+      <button class="toggle" data-article="georreferenciamento">Notas</button>
+    </article>
+
+    <article class="card">
+      <h3>API - Portal Único Siscomex</h3>
+        <a class="link" href="https://docs.portalunico.siscomex.gov.br/api/rcnt/" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 4l8 8-1.41 1.41L13 8.83V20h-2V8.83l-5.59 5.58L4 12l8-8z"/></svg>
+          Recintos Aduaneiros
+        </a>      
+      <p class="desc">API de interação entre os recintos e o Portal Único de Comércio Exterior no Sistema Integrado de Comércio Exterior (Portal Siscomex), aqui chamada de API-Recintos.</p>
+    
+      <button class="toggle" data-article="api">Notas</button>
+    </article>
+
+    <article class="card">
+      <h3>Legislação</h3>
+        <a class="link" href="https://www.gov.br/receitafederal/pt-br/assuntos/aduana-e-comercio-exterior/manuais/alfandegamento/legislacao" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 4l8 8-1.41 1.41L13 8.83V20h-2V8.83l-5.59 5.58L4 12l8-8z"/></svg>
+        Abrir Legislação
+        </a>      
+      <p class="desc">Legislação pertinente a recintos aduaneiros, citada no corpo de Manual de Alfandegamento. Importante validar futuras atualizações de cada norma, sob pena de consulta a legislação não vigente. </p>
+      <button class="toggle" data-article="legislacao">Notas</button>
+    </article>
+  </section>
+
+  <!-- Modal único, preenchido dinamicamente -->
+  <div id="modal" class="modal">
+    <div class="modal-content" id="modalContent"></div>
+  </div>
+
+  <script>
+    const modal = document.getElementById("modal");
+    const modalContent = document.getElementById("modalContent");
+    const botoes = document.querySelectorAll(".toggle");
+
+    // Função que retorna o HTML do texto longo para cada artigo
+    function getTextoLongo(articleId) {
+      switch(articleId) {
+        case "georreferenciamento":
+          return `<p>Em dispositivos móveis, é preciso obter arquivo csv contendo coordenadas dos ativos a serem plotadas.</p>
+          <li>Arquivo csv é gerado pelo aplicativo Gemor no Analytics/ContÁgil, devendo ser copiado para o dispositivo móvel.</li>
+          <li>No ícone de upload, informe o arquivo csv.</li>
+          <li> Ícones do mapa:
+              <ul>
+                    <li>Zoom - Canto superior esquerdo.</li>
+                    <li>Upload - Canto superior direito.</li>
+                    <li>Mapas - Canto superior direito. Permite trocar por diversos mapas.</li>
+                    <li>Círculos numerados são agrupamentos de ativos.</li>
+                    <li>Os demais ícones representam os ativos.</li>
+                    <li>Ao clicar sobre um ícone, são apresentadas informações pertinentes.</li>
+                    <li>Câmeras de Segurança:</li>
+                        <ul>
+                            <li>As fixas devem ter azimute.</li>
+                            <li>Não tendo sido informado azimute, subentendemos ser dome.</li>
+                            <li>Para as fixas, são apresentados triângulos voltados para o azimute da própria câmera.</li>
+                            <li>Círculos numerados são agrupamentos de ativos.</li>
+                        </ul>  
+              </ul>  
+          </li>
+          <li>Ao clicar em um local no mapa, as coordenadas geográticas são apreentadas.</li>
+          <li>Ativos informados na mesma coordenada são apresentados por círculo numerado. O número contêm a quantidade de ativos na coordenada.</li>
+          <li>É preciso ter cuidado no envio de ocorrências à API Recintos. Inclusão apenas para novas ocorrências.</li>
+          <li>Orientamos não excluir um ativo, a não ser que haja certeza de não ter sido referenciado em aluma ocorrência qualquer. Retifique para georreferenciamento ativo falso.</li>          
+          <li>Azimute é um ângulo horizontal medido a partir da direção Norte em sentido horário, variando de \(0^{\circ }\) a \(360^{\circ }\). É uma coordenada angular usada em navegação, topografia e astronomia para determinar a direção de um ponto em relação a um observador ou ponto de referência, como o norte verdadeiro ou magnético. </li>          
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>                              
+          `;
+        case "api":
+          return `<p>A API-Recintos permite comunicação direta entre os recintos aduaneiros e o Portal Único Siscomex,
+          garantindo maior eficiência, transparência e automação nos processos de comércio exterior.</p>`;
+        case "legislacao":
+          return `<p>A seção de legislação reúne todas as normas citadas no Manual de Alfandegamento, permitindo
+          acesso rápido às regras que regem o funcionamento dos recintos e operações de comércio exterior.</p>`;
+        default:
+          return `<p>Texto não disponível.</p>`;
+      }
+    }
+
+    // Abre modal com conteúdo dinâmico
+    botoes.forEach(btn => {
+      btn.addEventListener("click", function() {
+        const articleId = this.getAttribute("data-article");
+        modalContent.innerHTML = getTextoLongo(articleId);
+        modal.style.display = "block";
+      });
+    });
+
+    // Fecha ao clicar fora
+    window.addEventListener("click", function(e) {
+      if (e.target === modal) {
+        modal.style.display = "none";
+      }
+    });
+
+    // Fecha ao pressionar ESC
+    window.addEventListener("keydown", function(e) {
+      if (e.key === "Escape") {
+        modal.style.display = "none";
+      }
+    });
+  </script>
+</body>
+</html>

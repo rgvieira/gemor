@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>Exemplo Modal</title>
+  <style>
+  :root{
+      --bg: #0f172a;
+      --panel: #111827;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --accent: #3b82f6;
+      --accent-2: #60a5fa;
+      --border: #1f2937;
+      --card: #0b1021;
+    }
+    @media (prefers-color-scheme: light) {
+      :root{
+        --bg: #f8fafc;
+        --panel: #ffffff;
+        --text: #111827;
+        --muted: #6b7280;
+        --accent: #1d4ed8;
+        --accent-2: #2563eb;
+        --border: #e5e7eb;
+        --card: #f1f5f9;
+      }
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 600px at 20% -10%, rgba(59,130,246,0.18), transparent 60%),
+                  radial-gradient(800px 400px at 100% 0%, rgba(56,189,248,0.15), transparent 60%), var(--bg);
+      color: var(--text);
+    }
+    .container { max-width: 980px; margin: 0 auto; padding: 40px 24px 64px; }
+    header { display: grid; gap: 12px; margin-bottom: 32px; text-align: center; }
+    .brand {
+      display: inline-flex; align-items: center; gap: 10px; margin: 0 auto 4px;
+      padding: 10px 14px; border: 1px solid var(--border); border-radius: 14px;
+      background: linear-gradient(180deg, var(--panel), var(--card));
+    }
+    .brand svg { width: 22px; height: 22px; color: var(--accent); }
+    .brand span { font-weight: 700; letter-spacing: 0.3px; color: var(--text); }
+    h1 { font-size: clamp(28px, 4.6vw, 40px); margin: 0; font-weight: 700; }
+    .subtitle { max-width: 760px; margin: 0 auto; color: var(--muted); font-size: clamp(14px, 2.3vw, 16px); }
+    .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+    @media (max-width: 860px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 560px) { .grid { grid-template-columns: 1fr; } }
+    .card {
+      border: 1px solid var(--border); border-radius: 16px;
+      background: linear-gradient(180deg, var(--panel), var(--card));
+      padding: 18px; box-shadow: 0 8px 24px rgba(0,0,0,0.16);
+    }
+    .card h3 { margin: 4px 0 8px; font-size: 18px; font-weight: 600; }
+    .desc { color: var(--muted); margin: 0 0 14px; font-size: 14.5px; line-height: 1.6; }
+    .link {
+      display: inline-flex; align-items: center; gap: 8px; text-decoration: none;
+      color: var(--text); background: linear-gradient(180deg, rgba(59,130,246,0.18), rgba(59,130,246,0.34));
+      border: 1px solid rgba(59,130,246,0.4); padding: 10px 14px; border-radius: 12px;
+      font-weight: 600; box-shadow: 0 8px 20px rgba(59,130,246,0.22);
+    }
+    .link svg { width: 16px; height: 16px; }
+    .extra-text { display: none; margin-top: 10px; color: var(--muted); font-size: 14px; line-height: 1.6; }
+    footer { margin-top: 36px; padding-top: 18px; border-top: 1px solid var(--border); color: var(--muted); font-size: 13px; text-align: center; }
+    button.toggle {
+      background: var(--accent); color: #fff; border: none; padding: 8px 12px;
+      border-radius: 8px; cursor: pointer; font-weight: 600;
+    }
+
+    .toggle {
+      background: #3b82f6;
+      color: #fff;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    /* Estilo da caixa de mensagem (modal) */
+    .modal {
+      display: none; /* escondido por padrão */
+      position: fixed;
+      z-index: 1000;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0.5); /* fundo escuro */
+    }
+
+    .modal-content {
+      background: #fff;
+      color: #333;
+      margin: 10% auto;
+      padding: 20px;
+      border-radius: 8px;
+      width: 80%;
+      max-width: 600px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <section>
+       <article class="card">
+        <h3>Georreferenciamento</h3>
+        <a class="link" href="plotaGeorrefereciasPorRecinto.html" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 4l8 8-1.41 1.41L13 8.83V20h-2V8.83l-5.59 5.58L4 12l8-8z"/></svg>
+          Mapa dos Ativos
+        </a>
+        <p class="desc">Mapeamento de ativos de recinto aduaneiro (câmeras, catracas, balanças, áreas de armazenagem, etc). Obtenha previamente o arquivo csv com as coordenadas do recinto.</p>
+        <button id="btnInfo" class="toggle">Notas</button>
+
+      </article>
+
+      <article class="card">
+        <h3>API - Portal Único Siscomex</h3>
+        <a class="link" href="https://docs.portalunico.siscomex.gov.br/api/rcnt/" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 4l8 8-1.41 1.41L13 8.83V20h-2V8.83l-5.59 5.58L4 12l8-8z"/></svg>
+          Recintos Aduaneiros
+        </a>
+        <p class="desc">API de interação entre os recintos e o Portal Único de Comércio Exterior no Sistema Integrado de Comércio Exterior (Portal Siscomex), aqui chamada de API-Recintos.</p>
+      </article>
+
+            <article class="card">
+        <h3>Legislação</h3>
+          <a class="link" href="https://www.gov.br/receitafederal/pt-br/assuntos/aduana-e-comercio-exterior/manuais/alfandegamento/legislacao" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 4l8 8-1.41 1.41L13 8.83V20h-2V8.83l-5.59 5.58L4 12l8-8z"/></svg>
+            Abrir Legislação
+          </a>        
+        <p class="desc">Legislação citada no corpo de Manual de Alfandegamento.</p>
+        <div class="actions">
+
+        </div>
+      </article>
+  </section>
+
+  <!-- Caixa de mensagem (modal) -->
+  <div id="textoLongo" class="modal">
+    <div class="modal-content">
+      Este módulo de georreferenciamento permite visualizar em mapa interativo todos os ativos do recinto,
+      facilitando a gestão e monitoramento. Com ele é possível identificar a localização precisa de câmeras,
+      catracas, balanças e áreas de armazenagem, além de gerar relatórios detalhados para auditoria e
+      planejamento estratégico. O sistema também suporta importação de arquivos CSV com coordenadas
+      previamente definidas, garantindo rapidez na configuração inicial e flexibilidade para atualizações futuras.
+    </div>
+  </div>
+
+  <script>
+    const btn = document.getElementById("btnInfo");
+    const modal = document.getElementById("textoLongo");
+
+    // abre/fecha ao clicar no botão
+    btn.addEventListener("click", function() {
+      if (modal.style.display === "block") {
+        modal.style.display = "none";
+        this.textContent = "Saiba mais";
+      } else {
+        modal.style.display = "block";
+        this.textContent = "Ocultar";
+      }
+    });
+
+    // fecha ao clicar fora da caixa de conteúdo
+    window.addEventListener("click", function(e) {
+      if (e.target === modal) {
+        modal.style.display = "none";
+        btn.textContent = "Notas";
+      }
+    });
+
+    // fecha ao pressionar ESC
+    window.addEventListener("keydown", function(e) {
+      if (e.key === "Escape") {
+        modal.style.display = "none";
+        btn.textContent = "Notas";
+      }
+    });
+  </script>
+</body>
+</html>
