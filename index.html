@@ -2,234 +2,143 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
-  <title>Gemor</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="color-scheme" content="light dark" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <title>Exemplo Modal Dinâmico</title>
   <style>
-    :root{
-      --bg: #0f172a;
-      --panel: #111827;
-      --text: #e5e7eb;
-      --muted: #9ca3af;
-      --accent: #3b82f6;
-      --accent-2: #60a5fa;
-      --border: #1f2937;
-      --card: #0b1021;
+    body { font-family: Inter, sans-serif; margin:0; padding:20px; background:#0f172a; color:#e5e7eb; }
+    .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+    .card { border:1px solid #1f2937; border-radius:16px; background:#111827; padding:18px; }
+    .card h3 { margin:4px 0 8px; font-size:18px; font-weight:600; }
+        .link {
+      display: inline-flex; align-items: center; gap: 8px; text-decoration: none;
+      color: var(--text); background: linear-gradient(180deg, rgba(59,130,246,0.18), rgba(59,130,246,0.34));
+      border: 1px solid rgba(59,130,246,0.4); padding: 10px 14px; border-radius: 12px;
+      font-weight: 600; box-shadow: 0 8px 20px rgba(59,130,246,0.22);
     }
-    @media (prefers-color-scheme: light) {
-      :root{
-        --bg: #f8fafc;
-        --panel: #ffffff;
-        --text: #111827;
-        --muted: #6b7280;
-        --accent: #1d4ed8;
-        --accent-2: #2563eb;
-        --border: #e5e7eb;
-        --card: #f1f5f9;
-      }
+    .link svg { width: 16px; height: 16px; }
+    .extra-text { display: none; margin-top: 10px; color: var(--muted); font-size: 14px; line-height: 1.6; }
+    footer { margin-top: 36px; padding-top: 18px; border-top: 1px solid var(--border); color: var(--muted); font-size: 13px; text-align: center; }
+    button.toggle {
+      background: var(--accent); color: #fff; border: none; padding: 8px 12px;
+      border-radius: 8px; cursor: pointer; font-weight: 600;
     }
-    * { box-sizing: border-box; }
-    html, body { height: 100%; }
-    body {
-      margin: 0;
-      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background: radial-gradient(1200px 600px at 20% -10%, rgba(59,130,246,0.18), transparent 60%),
-                  radial-gradient(800px 400px at 100% 0%, rgba(56,189,248,0.15), transparent 60%), var(--bg);
-      color: var(--text);
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-    }
-    .container {
-      max-width: 980px;
-      margin: 0 auto;
-      padding: 40px 24px 64px;
-    }
-    header {
-      display: grid;
-      gap: 12px;
-      margin-bottom: 32px;
-      text-align: center;
-    }
-    .brand {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      margin: 0 auto 4px;
-      padding: 10px 14px;
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      background: linear-gradient(180deg, var(--panel), var(--card));
-      box-shadow: 0 8px 24px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.06);
-    }
-    .brand svg {
-      width: 22px;
-      height: 22px;
-      color: var(--accent);
-    }
-    .brand span {
-      font-weight: 700;
-      letter-spacing: 0.3px;
-      color: var(--text);
-    }
-    h1 {
-      font-size: clamp(28px, 4.6vw, 40px);
-      margin: 0;
-      font-weight: 700;
-      letter-spacing: -0.5px;
-    }
-    .subtitle {
-      max-width: 760px;
-      margin: 0 auto;
-      color: var(--muted);
-      font-size: clamp(14px, 2.3vw, 16px);
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 18px;
-    }
-    @media (max-width: 860px) {
-      .grid { grid-template-columns: repeat(2, 1fr); }
-    }
-    @media (max-width: 560px) {
-      .grid { grid-template-columns: 1fr; }
-    }
-
-    .card {
-      position: relative;
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      background: linear-gradient(180deg, var(--panel), var(--card));
-      padding: 18px;
-      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.16), inset 0 1px 0 rgba(255,255,255,0.06);
-      overflow: hidden;
-    }
-    .card::after{
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(400px 120px at 100% 0%, rgba(59,130,246,0.15), transparent 60%);
-      opacity: 0;
-      transition: opacity .2s ease;
-      pointer-events: none;
-    }
-    .card:hover {
-      transform: translateY(-2px);
-      border-color: rgba(59,130,246,0.35);
-      box-shadow: 0 14px 34px rgba(0,0,0,0.24), inset 0 1px 0 rgba(255,255,255,0.08);
-    }
-    .card:hover::after{ opacity: 1; }
-
-    .card h3 {
-      margin: 4px 0 8px;
-      font-size: 18px;
-      font-weight: 600;
-      letter-spacing: 0.2px;
-    }
-    .desc {
-      color: var(--muted);
-      margin: 0 0 14px;
-      font-size: 14.5px;
-      line-height: 1.6;
-    }
-    .actions {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      margin-top: 6px;
-    }
-    .link {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      text-decoration: none;
-      color: var(--text);
-      background: linear-gradient(180deg, rgba(59,130,246,0.18), rgba(59,130,246,0.34));
-      border: 1px solid rgba(59,130,246,0.4);
-      padding: 10px 14px;
-      border-radius: 12px;
-      font-weight: 600;
-      transition: background .18s ease, transform .18s ease, box-shadow .18s ease;
-      box-shadow: 0 8px 20px rgba(59,130,246,0.22);
-    }
-    .link:hover {
-      transform: translateY(-1px);
-      background: linear-gradient(180deg, rgba(59,130,246,0.26), rgba(59,130,246,0.44));
-      box-shadow: 0 12px 26px rgba(59,130,246,0.28);
-    }
-    .link svg {
-      width: 16px; height: 16px;
-    }
-
-    footer {
-      margin-top: 36px;
-      padding-top: 18px;
-      border-top: 1px solid var(--border);
-      color: var(--muted);
-      font-size: 13px;
-      text-align: center;
-    }
+    .desc { color:#9ca3af; font-size:14.5px; line-height:1.6; }
+    .toggle { background:#3b82f6; color:#fff; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600; }
+    .modal { display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background-color:rgba(0,0,0,0.5); }
+    .modal-content { background:#fff; color:#333; margin:10% auto; padding:20px; border-radius:8px; width:80%; max-width:600px; line-height:1.6; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <div class="brand" aria-label="Marca Gemor">
-        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-          <path d="M12 2l3.5 7.5L23 10l-6 5.5L18.5 22 12 18.5 5.5 22 7 15.5 1 10l7.5-.5L12 2z"></path>
-        </svg>
-        <span>Gemor</span>
-      </div>
-      <h1>Menu principal</h1>
-      <p class="subtitle">Escolha uma página para continuar. Cada seção reúne funcionalidades específicas com foco em clareza, velocidade e precisão.</p>
-    </header>
+  <section class="grid">
+    <article class="card">
+      <h3>Georreferenciamento</h3>
+        <a class="link" href="plotaGeorrefereciasPorRecinto.html" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 4l8 8-1.41 1.41L13 8.83V20h-2V8.83l-5.59 5.58L4 12l8-8z"/></svg>
+          Mapa dos Ativos
+        </a>      
+        <p class="desc">Mapeamento de ativos de recinto aduaneiro (câmeras, catracas, balanças, áreas de armazenagem, etc). Obtenha previamente o arquivo csv com as coordenadas do recinto.</p>
+      <button class="toggle" data-article="georreferenciamento">Notas</button>
+    </article>
 
-    <section class="grid" aria-label="Navegação para páginas">
-      <article class="card">
-        <h3>Georreferenciamento</h3>
-          <a class="link" href="plotaGeorrefereciasPorRecinto.html" target="_blank" rel="noopener noreferrer">
-            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 4l8 8-1.41 1.41L13 8.83V20h-2V8.83l-5.59 5.58L4 12l8-8z"/></svg>
-            Mapa dos Ativos
-          </a>
-        <p class="desc">Mapeamento de ativos de recinto aduaneiro(câmeras, catracas, balanças, áreas de armazenagem, etc). Obtenha previamente o arquivo csv com as coordenadas do recinto.</p>
-        <div class="actions">
+    <article class="card">
+      <h3>API - Portal Único Siscomex</h3>
+        <a class="link" href="https://docs.portalunico.siscomex.gov.br/api/rcnt/" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 4l8 8-1.41 1.41L13 8.83V20h-2V8.83l-5.59 5.58L4 12l8-8z"/></svg>
+          Recintos Aduaneiros
+        </a>      
+      <p class="desc">API de interação entre os recintos e o Portal Único de Comércio Exterior no Sistema Integrado de Comércio Exterior (Portal Siscomex), aqui chamada de API-Recintos.</p>
+    
+      <button class="toggle" data-article="api">Notas</button>
+    </article>
 
-        </div>
-      </article>
+    <article class="card">
+      <h3>Legislação</h3>
+        <a class="link" href="https://www.gov.br/receitafederal/pt-br/assuntos/aduana-e-comercio-exterior/manuais/alfandegamento/legislacao" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 4l8 8-1.41 1.41L13 8.83V20h-2V8.83l-5.59 5.58L4 12l8-8z"/></svg>
+        Abrir Legislação
+        </a>      
+      <p class="desc">Legislação pertinente a recintos aduaneiros, citada no corpo de Manual de Alfandegamento. Importante validar futuras atualizações de cada norma, sob pena de consulta a legislação não vigente. </p>
+      <button class="toggle" data-article="legislacao">Notas</button>
+    </article>
+  </section>
 
-      <article class="card">
-        <h3>API - Portal Único Siscomex</h3>
-           <a class="link" href="https://docs.portalunico.siscomex.gov.br/api/rcnt/" target="_blank" rel="noopener noreferrer">
-            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 4l8 8-1.41 1.41L13 8.83V20h-2V8.83l-5.59 5.58L4 12l8-8z"/></svg>
-            Recintos Aduaneiros 
-          </a>
-        <p class="desc">Application Programming Interface (API) de interação entre os recintos e o Portal Único de Comércio Exterior no Sistema Integrado de Comércio Exterior (Portal Siscomex), aqui chamada de API-Recintos. </p>
-        <div class="actions">
-
-        </div>
-      </article>
-
-      <article class="card">
-        <h3>Legislação</h3>
-          <a class="link" href="https://www.gov.br/receitafederal/pt-br/assuntos/aduana-e-comercio-exterior/manuais/alfandegamento/legislacao" target="_blank" rel="noopener noreferrer">
-            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 4l8 8-1.41 1.41L13 8.83V20h-2V8.83l-5.59 5.58L4 12l8-8z"/></svg>
-            Abrir Legislação
-          </a>        
-        <p class="desc">Legislação citada no corpo de Manual de Alfandegamento.</p>
-        <div class="actions">
-
-        </div>
-      </article>
-    </section>
-
-    <footer>
-      Gemor · Grupo de Monitoramento de Recintos
-    </footer>
+  <!-- Modal único, preenchido dinamicamente -->
+  <div id="modal" class="modal">
+    <div class="modal-content" id="modalContent"></div>
   </div>
+
+  <script>
+    const modal = document.getElementById("modal");
+    const modalContent = document.getElementById("modalContent");
+    const botoes = document.querySelectorAll(".toggle");
+
+    // Função que retorna o HTML do texto longo para cada artigo
+    function getTextoLongo(articleId) {
+      switch(articleId) {
+        case "georreferenciamento":
+          return `<p>Em dispositivos móveis, é preciso obter arquivo csv contendo coordenadas dos ativos a serem plotadas.</p>
+          <li>Arquivo csv é gerado pelo aplicativo Gemor no Analytics/ContÁgil, devendo ser copiado para o dispositivo móvel.</li>
+          <li>No ícone de upload, informe o arquivo csv.</li>
+          <li> Ícones do mapa:
+              <ul>
+                    <li>Zoom - Canto superior esquerdo.</li>
+                    <li>Upload - Canto superior direito.</li>
+                    <li>Mapas - Canto superior direito. Permite trocar por diversos mapas.</li>
+                    <li>Círculos numerados são agrupamentos de ativos.</li>
+                    <li>Os demais ícones representam os ativos.</li>
+                    <li>Ao clicar sobre um ícone, são apresentadas informações pertinentes.</li>
+                    <li>Câmeras de Segurança:</li>
+                        <ul>
+                            <li>As fixas devem ter azimute.</li>
+                            <li>Não tendo sido informado azimute, subentendemos ser dome.</li>
+                            <li>Para as fixas, são apresentados triângulos voltados para o azimute da própria câmera.</li>
+                            <li>Círculos numerados são agrupamentos de ativos.</li>
+                        </ul>  
+              </ul>  
+          </li>
+          <li>Ao clicar em um local no mapa, as coordenadas geográticas são apreentadas.</li>
+          <li>Ativos informados na mesma coordenada são apresentados por círculo numerado. O número contêm a quantidade de ativos na coordenada.</li>
+          <li>É preciso ter cuidado no envio de ocorrências à API Recintos. Inclusão apenas para novas ocorrências.</li>
+          <li>Orientamos não excluir um ativo, a não ser que haja certeza de não ter sido referenciado em aluma ocorrência qualquer. Retifique para georreferenciamento ativo falso.</li>          
+          <li>Azimute é um ângulo horizontal medido a partir da direção Norte em sentido horário, variando de \(0^{\circ }\) a \(360^{\circ }\). É uma coordenada angular usada em navegação, topografia e astronomia para determinar a direção de um ponto em relação a um observador ou ponto de referência, como o norte verdadeiro ou magnético. </li>          
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>                              
+          `;
+        case "api":
+          return `<p>A API-Recintos permite comunicação direta entre os recintos aduaneiros e o Portal Único Siscomex,
+          garantindo maior eficiência, transparência e automação nos processos de comércio exterior.</p>`;
+        case "legislacao":
+          return `<p>A seção de legislação reúne todas as normas citadas no Manual de Alfandegamento, permitindo
+          acesso rápido às regras que regem o funcionamento dos recintos e operações de comércio exterior.</p>`;
+        default:
+          return `<p>Texto não disponível.</p>`;
+      }
+    }
+
+    // Abre modal com conteúdo dinâmico
+    botoes.forEach(btn => {
+      btn.addEventListener("click", function() {
+        const articleId = this.getAttribute("data-article");
+        modalContent.innerHTML = getTextoLongo(articleId);
+        modal.style.display = "block";
+      });
+    });
+
+    // Fecha ao clicar fora
+    window.addEventListener("click", function(e) {
+      if (e.target === modal) {
+        modal.style.display = "none";
+      }
+    });
+
+    // Fecha ao pressionar ESC
+    window.addEventListener("keydown", function(e) {
+      if (e.key === "Escape") {
+        modal.style.display = "none";
+      }
+    });
+  </script>
 </body>
 </html>

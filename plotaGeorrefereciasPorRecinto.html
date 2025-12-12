@@ -7,8 +7,10 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="icone.png">
-    <!-- Leaflet CSS -->
+    <!-- Leaflet CSS 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <!-- MarkerCluster CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.min.css" />
@@ -74,6 +76,22 @@
     .map-footer-item img {
       height: 20px;
     }
+    .polygon-label {
+      font-weight: bold;
+      font-size: 10px;
+      color: #000;
+      background: transparent;
+      border: none;
+      box-shadow: none;
+    }
+    .text-label {
+      font-size: 14px;
+      font-weight: bold;
+      color: darkblue;
+      background: rgba(255,255,255,0.7);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
    #uploadIcon {
       display: inline-block;
       cursor: pointer;
@@ -120,48 +138,40 @@
   <p id="siglaRecinto"></p>
     <!-- Ícone de upload -->
      
-  <label id="uploadIcon" for="fileCSV" title="Upload de csv contendo coordenadas">
+  <label id="uploadIcon" for="fileCSV" title="Upload de arquivo csv contendo coordenadas">
+
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
       <path d="M5 20h14v-2H5v2zm7-18l-7 7h4v6h6v-6h4l-7-7z"/>
     </svg>
+    <br>
+  <span style="font-size: 14px; color: navy;">Upload de arquivo csv contendo coordenadas</span>
   </label>
 
   <input type="file" id="fileCSV" accept=".csv">
 
   <div id="map"></div>
   <div id="map-title"></div>
+  
   <!-- Ícone do Flaticon no canto direito -->
-  <div id="flaticon-icon">
     <a href="https://www.flaticon.com/br/" 
       title="Flaticon" target="_blank">
       <img src="https://www.flaticon.com/media/img/flaticon-logo.svg" 
           alt="Flaticon logo" style="width:32px;height:32px;">
     </a>
   </div>
-  
-  <!-- Leaflet JS -->
+
+  <div id="flaticon-icon">
+    
+
+  <!-- Leaflet JS 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <!-- MarkerCluster JS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.min.js"></script>
   <script>
       let pontos = [];    
-      //setMapa() 
 
-/*
-  function csvParaJson(csvTexto) {
-    const linhas = csvTexto.trim().split("\n");
-    const cabecalhos = linhas[0].split(/[,;]+/).map(h => h.trim());
-    return linhas.slice(1).map(linha => {
-      const valores = linha.split(/[,;]+/).map(v => v.trim());
-      const objeto = {};
-      cabecalhos.forEach((chave, i) => {
-        objeto[chave] = valores[i] || "";
-      });
-      return objeto;
-    });
-  }
-
-  */
         // Função que converte CSV em JSON
         function csvParaJson(csvTexto) {
        
@@ -211,8 +221,8 @@
        function getArrayIcones() {
           let arrayIcones = [
                               {tipo: "Balança (ponto)" , url: "escala-industrial.png",icone:"https://cdn-icons-png.flaticon.com/512/8248/8248483.png" },
-                              {tipo: "Catraca e similares (ponto)", url: "torniquetes.png",icone:"https://cdn-icons-png.flaticon.com/512/3205/3205227.png" },
-                              {tipo: "Câmera (ponto)", url: "camera-ctv.png",icone: "https://cdn-icons-png.flaticon.com/512/5081/5081518.png"},
+                              {tipo: "Catraca e similares (ponto)", url: "torniquetes.png",icone:"https://cdn-icons-png.flaticon.com/512/1185/1185509.png" },
+                              {tipo: "Câmera (ponto)", url: "camera-ctv.png",icone: "https://cdn-icons-png.flaticon.com/512/10073/10073813.png"},
                               {tipo: "Portão, gate e similares (ponto)", url: "boom_gate2.png",icone:"https://cdn-icons-png.flaticon.com/512/4999/4999239.png" },
                               {tipo: "Portêiner (ponto)", url: "portainer.png",icone: "https://cdn-icons-png.flaticon.com/512/11860/11860966.png"},
                               {tipo: "Portêiner, Shiploader ou similares (ponto/polígono)", url: "portainer.png",icone: "https://cdn-icons-png.flaticon.com/512/11387/11387319.png"},
@@ -225,8 +235,10 @@
                               {tipo: "Tanque de armazenamento (ponto)", url: "TanqueArmazenamento.jpg",icone: "https://cdn-icons-png.flaticon.com/512/5755/5755651.png"},
                               {tipo: "Silo (ponto)", url: "silo.png",icone: "https://cdn-icons-png.flaticon.com/512/2078/2078261.png"},
                               {tipo: "Área de controle de carga solta (polígono)", url: "cargaSolta.png",icone: "https://cdn-icons-png.flaticon.com/512/4829/4829649.png"},
-                                //{tipo: "", url: ".png"},
-                                //{tipo: "", url: ".png"},
+                              {tipo: "Portêiner Shiploader ou similares (ponto/polígono)", url: "https://cdn-icons-png.flaticon.com/512/11860/11860966.png",icone: "https://cdn-icons-png.flaticon.com/512/11860/11860966.png"},
+                              {tipo: "Portêiner, Shiploader ou similares (ponto/polígono)", url: "https://cdn-icons-png.flaticon.com/512/11860/11860966.png",icone: "https://cdn-icons-png.flaticon.com/512/11860/11860966.png"},
+
+                              //{tipo: "", url: ".png"},
                                 //{tipo: "", url: ".png"},                                                                                                
 
                             ]
@@ -236,10 +248,13 @@
        function getIcone(icone,azimute) {
 
             let arrayIcones = getArrayIcones();
-            let retorno = './lib/icones/x.png'
+            let retorno = 'https://cdn-icons-png.flaticon.com/512/7199/7199765.png';
+           
             for (let i = 0; i < arrayIcones.length; i++) {
+           
               if (arrayIcones[i].tipo === icone) {
                   retorno = arrayIcones[i].icone
+                  
                   break;
               }           
             }
@@ -254,55 +269,65 @@
 
            let vetor = coord.split( ' - ')
 
-           //console.log(coord,vetor)
+
            return vetor[0]
 
        }
       // Função que desenha gráfico de azimute em canvas
       
 
-        function gerarGraficoAzimute(angulo) {
-            const canvas = document.createElement("canvas");
-            canvas.width = 200;
-            canvas.height = 200;
-            const ctx = canvas.getContext("2d");
+     function gerarGraficoAzimute(angulo) {
+          const canvas = document.createElement("canvas");
+          canvas.width = 200;
+          canvas.height = 200;
+          const ctx = canvas.getContext("2d");
 
-            // círculo principal
-            ctx.beginPath();
-            ctx.arc(100, 100, 80, 0, 2 * Math.PI);
-            ctx.stroke();
+          // círculo principal
+          ctx.beginPath();
+          ctx.arc(100, 100, 80, 0, 2 * Math.PI);
+          ctx.stroke();
 
-            // marcações principais (N, E, S, W)
-            ctx.font = "14px Arial";
-            ctx.textAlign = "center";
-            ctx.fillText("N", 100, 25);
-            ctx.fillText("E", 175, 105);
-            ctx.fillText("S", 100, 185);
-            ctx.fillText("W", 25, 105);
+          // marcações principais (N, E, S, W)
+          ctx.font = "14px Arial";
+          ctx.textAlign = "center";
+          ctx.fillText("N", 100, 25);
+          ctx.fillText("E", 175, 105);
+          ctx.fillText("S", 100, 185);
+          ctx.fillText("W", 25, 105);
 
-            // seta indicando o azimute
-            const rad = (angulo - 90) * Math.PI / 180; // ajustar para canvas
-            const x = 100 + 70 * Math.cos(rad);
-            const y = 100 + 70 * Math.sin(rad);
+          // marcações adicionais dos ângulos
+          const angulos = [0, 45, 90, 135, 180, 225, 280, 325];
+          angulos.forEach(a => {
+              const rad = (a - 90) * Math.PI / 180; // ajustar para canvas
+              const x = 100 + 90 * Math.cos(rad);   // raio um pouco maior que a seta
+              const y = 100 + 90 * Math.sin(rad);
+              ctx.fillText(a.toString(), x, y);
+          });
 
-            ctx.beginPath();
-            ctx.moveTo(100, 100);
-            ctx.lineTo(x, y);
-            ctx.strokeStyle = "red";
-            ctx.lineWidth = 2;
-            ctx.stroke();
+          // seta indicando o azimute
+          const rad = (angulo - 90) * Math.PI / 180; // ajustar para canvas
+          const x = 100 + 70 * Math.cos(rad);
+          const y = 100 + 70 * Math.sin(rad);
 
-            // se azimute for diferente de zero, acrescenta círculo na extremidade
-            if (angulo !== 0) {
+          ctx.beginPath();
+          ctx.moveTo(100, 100);
+          ctx.lineTo(x, y);
+          ctx.strokeStyle = "red";
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          // se azimute for diferente de zero, acrescenta círculo na extremidade
+          if (angulo !== 0) {
               ctx.beginPath();
               ctx.arc(x, y, 5, 0, 2 * Math.PI); // círculo pequeno
               ctx.strokeStyle = "red";
               ctx.lineWidth = 2;
               ctx.stroke();
-            }
+          }
 
-            return canvas;
-        }
+          return canvas;
+      }
+
 
         // Função para calcular azimute em relação ao norte verdadeiro
         function calcularAzimute(lat1, lon1, lat2, lon2) {
@@ -323,6 +348,20 @@
           return (brng + 360) % 360; // normalizar para 0–360°
         }
 
+        // Função que calcula o cone e retorna o array de coordenadas
+        function calcularCone(lat, lon, azimute, abertura, altura) {
+          var rad = azimute * Math.PI / 180;
+          var half = abertura / 2 * Math.PI / 180;
+
+          var lat1 = lat + altura * Math.cos(rad - half);
+          var lon1 = lon + altura * Math.sin(rad - half);
+
+          var lat2 = lat + altura * Math.cos(rad + half);
+          var lon2 = lon + altura * Math.sin(rad + half);
+
+          // retorna o array de pontos do triângulo
+          return [[lat, lon], [lat1, lon1], [lat2, lon2]];
+        }
        
 
         function getCoordenada(coordenada) {
@@ -331,12 +370,11 @@
           return coordenada;
         }
 
-            
         function plotarPontosMapa(pontos) {
 
-                // ✅ esconder input e label após leitura
-          document.getElementById("fileCSV").style.display = "none";
-          document.getElementById("uploadIcon").style.display = "none";
+            // ✅ esconder input e label após leitura
+            document.getElementById("fileCSV").style.display = "none";
+            document.getElementById("uploadIcon").style.display = "none";
             //Recinto - Dados devem ser passados 
             let nomeRecinto = pontos[0].NomeRecinto;
             let latitudeRecinto = pontos[0].LatitudeRecinto;
@@ -376,9 +414,7 @@
 
             latitudeRecinto = latitudeRecinto ? latitudeRecinto : parseFloat(-20.329); 
             longitudeRecinto = longitudeRecinto ? longitudeRecinto : parseFloat(-40.292); 
-            
-
-          // console.log('coord',pontos.length,pontos[0].Latitude,pontos[0].Longitude,latitude,longitude)
+          
             const nivelZoom = 16;
             const  precisaoAgrupamentoMinimo = 0;
             const  precisaoAgrupamentoMaximo = 80; 
@@ -405,19 +441,28 @@
               const centro = map.getCenter();
               const azimute = calcularAzimute(centro.lat, centro.lng, lat, lng);
 
+              // gera o gráfico do azimute
+              const canvas = gerarGraficoAzimute(azimute);
+
+              // cria um container para texto + canvas
+              const container = document.createElement("div");
+              container.innerHTML = `
+                <b>Coordenadas:</b><br>
+                Latitude: ${lat.toFixed(6)}<br>
+                Longitude: ${lng.toFixed(6)}<br>
+                Azimute em relação ao norte: ${azimute.toFixed(2)}°
+                <br><br>
+              `;
+              container.appendChild(canvas);
+
               L.popup()
                 .setLatLng(e.latlng)
-                .setContent(`
-                  <b>Coordenadas:</b><br>
-                  Latitude: ${lat.toFixed(6)}<br>
-                  Longitude: ${lng.toFixed(6)}<br>
-                  Azimute em relação ao norte: ${azimute.toFixed(2)}°
-                `)
+                .setContent(container)
                 .openOn(map);
             });
 
-            // Define o título
-            document.getElementById("map-title").innerHTML = nomeRecinto + ': ' + codRecinto; 
+
+           
 
 
             // cria controle de upload dentro do mapa
@@ -445,7 +490,7 @@
               const reader = new FileReader();
               reader.onload = () => {
                 pontos = csvParaJson(reader.result);
-                console.log("CSV convertido em JSON:", pontos);
+
                 usarPontos();
                 event.target.value = ""; // limpa para permitir re-seleção
               };
@@ -537,18 +582,15 @@
             let poligonoConferencia = []; 
             let poligonoPorteiner = [];     
 
-
+            //Percorre a tabela de ativos                          
             for (let ix = 0; ix < pontos.length; ix++) {  
           
               let p = pontos[ix]
               
               if(p.Ativo != 'true') continue
-      
 
               //Validar se é ponto ou área
               //Ponto não pode ter polígono no p.Tipo
-              let indPoligono = p.Tipo.search('polígono') >=0 ? true : false
-
               let iconURL = getIcone(p.Tipo,p.Azimute)
 
               const customIcon = L.icon({
@@ -561,7 +603,7 @@
               latitude  = ''
               longitude = ''
 
-              if(indPoligono) {
+              if(p.Tipo.search('polígono') >=0) {
           
 
                   let arrayLatitude = p.Latitude.split(' - ')
@@ -578,6 +620,7 @@
                             poligonoRecinto.push([ultimaLatitude, UltimaLongitude]);
                           }
                       }
+                    
                       if (p.Tipo.search('veículos')>=0) { 
                           
                           poligonoAreaVeiculo.push([getCoordenada(arrayLatitude[lx]) , getCoordenada(arrayLongitude[lx])]);
@@ -637,23 +680,53 @@
                           }                         
                                                 
                       }     
-                        
-                        
-
-
 
                   }
 
               } 
-              if(!indPoligono) { 
+              if(p.Tipo.search('ponto') >=0) {
                   if(p.Latitude === '') continue; 
                   latitude = parseFloat(getCoordenada(getPrimeiraOcorrencia(p.Latitude)));
                   longitude = parseFloat(getCoordenada(getPrimeiraOcorrencia(p.Longitude)));
                   let azimute = p.Azimute ? p.Azimute : 0.
-                // if(typeof latitude === 'string') latitude = parseFloat(latitude)
-                // if(typeof longitude === 'string') longitude = parseFloat(longitude) 
-    
+
+                  //Marco Zero - Recinto
+                  if(p.Tipo.search('Recinto')>=0) {
+                     // Define o título da página
+                     document.getElementById("map-title").innerHTML = p.Equipamento;                      
+                     //var markers = L.markerClusterGroup();
+                     var markers = L.markerClusterGroup();
+                     markers.addLayer(L.marker([latitude, longitude]).bindPopup(p.Equipamento));
+                     map.addLayer(markers);
+                     continue;
+
+                  }   
+                  //Se for câmera e houver azimute
+                  if(p.Tipo.search('Câmera') >=0 && p.Azimute ){
+                      // Usa a função para obter coordenadas e desenhar no mapa
+                        var coordsCone = calcularCone(latitude, longitude, azimute, 40, 0.0005);
+                        /*
+                    Opções principais
+                    color: cor da borda.
+                    weight: espessura da borda.
+                    dashArray: define se a linha é contínua ou tracejada. Exemplo: "10, 5" (10px traço, 5px espaço).
+                    fillColor: cor interna do polígono.
+                    fillOpacity: opacidade do preenchimento (0 = transparente, 1 = opaco).
+                    opacity: opacidade da linha de contorno.
+                        */
+                    L.polygon(coordsCone, {
+                      color: 'blue',        // cor da linha
+                      weight: 1,            // espessura da linha
+                      dashArray: '5, 5',    // traços e espaços (5px traço, 5px espaço)
+                      fillColor: 'blue',    // cor de preenchimento
+                      fillOpacity: 0.09      // opacidade do preenchimento
+                    }).addTo(map);
+
+
+
+                  }
                   // Marker com popup contendo texto + gráfico
+                  
                   let marker = L.marker([latitude, longitude], { icon: customIcon })
                     .bindPopup(() => {
                       // conteúdo textual
@@ -661,24 +734,24 @@
                       
                       div.innerHTML = `
                         <ul style="padding-left: 15px; margin: 0;">
-                          <li><strong>${p.Tipo}</strong></li>
+                          <strong>${p.Tipo}</strong>
                           <li>${p.Equipamento}</li>
-                          <li>Azimute: ${azimute}</li>                      
+                         
+                          ${p.Azimute ? `<li>Azimute: ${p.Azimute}</li>` : ""}                                             
                           <li>Latitude: ${(parseFloat(getCoordenada(getPrimeiraOcorrencia(p.Latitude))))}</li>
                           <li>Longitude: ${(parseFloat(getCoordenada(getPrimeiraOcorrencia(p.Longitude))))}</li>
 
                         </ul>
                       `;
-                      // adiciona gráfico de azimute (exemplo: 45°)
-                      div.appendChild(gerarGraficoAzimute(azimute));
+                      if (p.Azimute) {
+                        div.appendChild(gerarGraficoAzimute(p.Azimute));
+                      }
                       return div;
                     });
 
-                markersCluster.addLayer(marker);
-
-
+                  markersCluster.addLayer(marker);
                 
-              }
+               }
             }
 
             map.addLayer(markersCluster);
@@ -696,11 +769,7 @@
               { titulo: "Veículo", icone: "" , cor: 'darkcyan'}
             ];
 
-          
-
-
             // Polígono do Recinto
-
             if (poligonoRecinto.length >= 1) {
           
               L.polyline(poligonoRecinto, {
@@ -710,73 +779,71 @@
                 // dashArray: '10, 10'      // tracejada (10px traço, 10px espaço)
               }).addTo(map);
             }
+
             // Área de posicionamento de veículos (polígono)
+          
             if (poligonoAreaVeiculo.length >= 1) {
-              
-              L.polygon(poligonoAreaVeiculo, {
-                color: rodapeInfo[7].cor,       // cor da linha
-                weight: 2,          // espessura
-                opacity: 0.6,       // transparência
-              // dashArray: '10, 10' // tracejada (10px traço, 10px espaço)
-              }).addTo(map);
+             
+                var polygon = L.polygon(poligonoAreaVeiculo, {color: rodapeInfo[7].cor}).addTo(map);
+                polygon.bindTooltip(rodapeInfo[7].titulo, {
+                permanent: false,   // sempre visível
+                direction: "center", // centralizado
+                className: "polygon-label" // opcional para estilizar via CSS
+                  }).openTooltip();
             }
+           
             // Área de posicionamento de Lotes
             if (poligonoAreaLote.length >=1) {
-              
-              L.polygon(poligonoAreaLote, {
-                color: rodapeInfo[5].cor,       // cor da linha
-                weight: 2,          // espessura
-                opacity: 0.6,       // transparência
-              // dashArray: '10, 10' // tracejada (10px traço, 10px espaço)
-              }).addTo(map);
+                var polygon = L.polygon(poligonoAreaLote, {color: rodapeInfo[5].cor}).addTo(map);
+                polygon.bindTooltip(rodapeInfo[5].titulo, {
+                permanent: false,   // sempre visível
+                direction: "center", // centralizado
+                className: "polygon-label" // opcional para estilizar via CSS
+                  }).openTooltip();
             }
             // Área de posicionamento de poligonoAreaCargaSolta
             if (poligonoAreaCargaSolta.length >= 1) {
-              
-              L.polygon(poligonoAreaCargaSolta, {
-                color: rodapeInfo[2].cor,       // cor da linha
-                weight: 2,          // espessura
-                opacity: 0.6,       // transparência
-              // dashArray: '10, 10' // tracejada (10px traço, 10px espaço)
-              }).addTo(map);
+                var polygon = L.polygon(poligonoAreaCargaSolta, {color: rodapeInfo[2].cor}).addTo(map);
+                polygon.bindTooltip(rodapeInfo[2].titulo, {
+                permanent: false,   // sempre visível
+                direction: "center", // centralizado
+                className: "polygon-label" // opcional para estilizar via CSS
+                  }).openTooltip();
             }
             // Área de posicionamento de poligonoAreaConteiner
             if (poligonoAreaConteiner.length >= 1) {
-              
-              L.polygon(poligonoAreaConteiner, {
-                color: rodapeInfo[4].cor,       // cor da linha
-                weight: 2,          // espessura
-                opacity: 0.6,       // transparência
-              // dashArray: '10, 10' // tracejada (10px traço, 10px espaço)
-              }).addTo(map);
+                var polygon = L.polygon(poligonoAreaConteiner, {color: rodapeInfo[4].cor}).addTo(map);
+                polygon.bindTooltip(rodapeInfo[4].titulo, {
+                permanent: false,   // sempre visível
+                direction: "center", // centralizado
+                className: "polygon-label" // opcional para estilizar via CSS
+                  }).openTooltip();
             }   
             // Área de posicionamento de poligonoConferencia
             if (poligonoConferencia.length >= 1) {
-              
-              L.polygon(poligonoConferencia, {
-                color: rodapeInfo[3].cor,      // cor da linha
-                weight: 2,          // espessura
-                opacity: 0.6,       // transparência
-              // dashArray: '10, 10' // tracejada (10px traço, 10px espaço)
-              }).addTo(map);
+                var polygon = L.polygon(poligonoConferencia, {color: rodapeInfo[3].cor}).addTo(map);
+                polygon.bindTooltip(rodapeInfo[3].titulo, {
+                permanent: false,   // sempre visível
+                direction: "center", // centralizado
+                className: "polygon-label" // opcional para estilizar via CSS
+                  }).openTooltip();
             }  
             // Área de posicionamento de poligonoPorteiner
             if (poligonoPorteiner.length >= 1) {
-              
-              L.polygon(poligonoPorteiner, {
-                color: rodapeInfo[6].cor,      // cor da linha
-                weight: 2,          // espessura
-                opacity: 0.6,       // transparência
-              // dashArray: '10, 10' // tracejada (10px traço, 10px espaço)
-              }).addTo(map);
+                var polygon = L.polygon(poligonoPorteiner, {color: rodapeInfo[6].cor}).addTo(map);
+                polygon.bindTooltip(rodapeInfo[6].titulo, {
+                permanent: false,   // sempre visível
+                direction: "center", // centralizado
+                className: "polygon-label" // opcional para estilizar via CSS
+                  }).openTooltip();
             }     
 
             //Abre os pontos de um cluster
             
-          markersCluster.on('clusterclick', function (a) {
-            a.layer.spiderfy(); // abre o cluster
-            a.originalEvent.preventDefault(); // evita comportamento padrão
-          });
+            markersCluster.on('clusterclick', function (a) {
+              a.layer.spiderfy(); // abre o cluster
+              a.originalEvent.preventDefault(); // evita comportamento padrão
+            });
 
 
             markersCluster.on('clusteringend', function () {
@@ -784,7 +851,7 @@
                 if (layer.spiderfy) layer.spiderfy();
               });
             });
-
+/*
             // Controle personalizado
             const footer = L.control({position: 'bottomleft'});
             footer.onAdd = function () {
@@ -798,6 +865,7 @@
             };
 
             footer.addTo(map);  
+            */
 
 
             // Ajusta o zoom para mostrar tudo
