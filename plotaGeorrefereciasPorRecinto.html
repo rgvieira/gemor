@@ -93,6 +93,13 @@
       padding: 2px 6px;
       border-radius: 4px;
     }
+    .tooltip-transparent {
+      background: transparent !important; /* remove fundo */
+      border: none !important;            /* remove borda */
+      box-shadow: none !important;        /* remove sombra */
+      color: blue;                        /* cor do texto */
+      font-weight: bold;
+    }    
    #uploadIcon {
       position: fixed;   /* fixa na tela */
       display: inline-block;
@@ -142,20 +149,7 @@
 
 <body>
   <p id="siglaRecinto"></p>
-   <!-- Ícone de upload -->
-  <!-- 
-   
 
-     
-  <label id="uploadIcon" for="fileCSV" title="Upload de arquivo csv contendo coordenadas">
-
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-      <path d="M5 20h14v-2H5v2zm7-18l-7 7h4v6h6v-6h4l-7-7z"/>
-    </svg>
-    <br>
-  <span style="font-size: 14px; color: navy;">Upload de arquivo csv contendo coordenadas</span>
-  </label>
--->
   <input type="file" id="fileCSV" accept=".csv">
 
   <div id="map"></div>
@@ -180,28 +174,36 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.min.js"></script>
   <script>
       //Variáveis e constantes globais
-      const nivelZoom = 16;
+      const nivelZoom = 18;
       const  precisaoAgrupamentoMinimo = 0;
       const  precisaoAgrupamentoMaximo = 80;
-      // Estado da função
-      let clickEnabled = false;
-      isTracing = true; //Mostra dados na console
-      // Grupo de clusters
-      let markersCluster ;
-      let pontos = [{Tipo: "", Equipamento: "", Azimute: 0, Longitude: 0, Latitude: 0}
-                   ];      
+      // Array para armazenar coordenadas das casas
+      let poligonoRecinto = []; 
+       
       // JSON com array de 5 itens
       const rodapeInfo = [
         { titulo: "Área:", icone: "", cor: 'navy' },                   
         { titulo: "Recinto", icone: "", cor: 'navy' },
-        { titulo: "Controle de Carga Solta", icone: "" , cor: 'purple'},      
-        { titulo: "Conferência Física", icone: "" , cor: 'orange'},
-        { titulo: "Posicionamento de Contêiner", icone: "", cor: 'red' },
-        { titulo: "Posicionamento de Veículo", icone: "" , cor: 'darkcyan'},        
-        { titulo: "Armazenamento de Lotes", icone: "" , cor: 'green'},          
-        { titulo: "Portêiner, Shiploader ou similares", icone: "" , cor: 'black'}
+                         ];    
+      const areas = [
+        { coords: [], titulo: "Posicionamento de Veículo", cor: 'darkcyan' },
+        { coords: [], titulo: "Armazenamento de Lotes", cor: 'green' },
+        { coords: [], titulo: "Controle de Carga Solta", cor: 'purple' },
+        { coords: [], titulo: "Posicionamento de Contêiner",cor: 'red' },
+        { coords: [], titulo: "Conferência Física", cor: 'orange' },
+        { coords: [], titulo: "Portêiner, Shiploader ou similares", cor: 'black' },
+        { coords: [], titulo: "Portêiner Shiploader ou similares", cor: 'black' }          
+                         ];   
 
-             ];                   
+      // Estado da função
+      let clickEnabled = false;
+      isTracing = false; //Mostra dados na console
+      // Grupo de clusters
+      let markersCluster ;
+      let pontos = [{Tipo: "", Equipamento: "", Azimute: 0, Longitude: 0, Latitude: 0}
+                   ];      
+          
+             
       // Mapas base gratuitos
         const baseMaps = {
           "OpenStreetMap": L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -241,7 +243,9 @@
           // Inicializa o mapa com OpenStreetMap
           map = L.map("map", {
             center: [-15.7797 , -47.9297], // Brasília
-            zoom: 6,
+            zoom: 6,                 // zoom inicial
+            minZoom: 1,               // zoom mínimo permitido
+            maxZoom: 18,              // zoom máximo permitido            
             layers: [baseMaps["OpenStreetMap"]]
           });     
           map.setView([-15.7797, -47.9297], 6)
@@ -677,14 +681,7 @@
             // Ícones da web
             arrayIcones = []
  
-            // Array para armazenar coordenadas das casas
-            let poligonoRecinto = []; 
-            let poligonoAreaVeiculo = []; 
-            let poligonoAreaLote = []; 
-            let poligonoAreaCargaSolta = [];     
-            let poligonoAreaConteiner = []; 
-            let poligonoConferencia = []; 
-            let poligonoPorteiner = [];     
+   
             //Conta quantos Recintos há em pontos
             let qtdRecintos = contarRecintos(pontos);   
                             
@@ -726,7 +723,14 @@
                             poligonoRecinto.push([ultimaLatitude, UltimaLongitude]);
                           }
                       }
-                    
+
+                      areas.forEach(area => {
+                     
+                          if (p.Tipo.toLocaleLowerCase().search(area.titulo.toLocaleLowerCase()) >= 0) {
+                            area.coords.push([getCoordenada(arrayLatitude[lx]) , getCoordenada(arrayLongitude[lx])]);
+                          }
+                      });  
+                    /*
                       if (p.Tipo.search('veículos')>=0) { 
                           
                           poligonoAreaVeiculo.push([getCoordenada(arrayLatitude[lx]) , getCoordenada(arrayLongitude[lx])]);
@@ -786,7 +790,7 @@
                           }                         
                                                 
                       }     
-
+*/
                   }
 
               } 
@@ -805,7 +809,9 @@
                      
                       //var markers = L.markerClusterGroup();
                       var markers = L.markerClusterGroup();
-                      markers.addLayer(L.marker([latitude, longitude]).bindPopup(p.Equipamento));
+                      markers.addLayer(L.marker([latitude, longitude]).//bindPopup(p.Equipamento));
+                      bindPopup("<strong style='color:blue;'>" + p.Equipamento + "</strong>"));
+
                       map.addLayer(markers);
                       continue;
 
@@ -867,15 +873,34 @@
             if(markersCluster) map.addLayer(markersCluster);
 
             // Polígono do Recinto
-            if (poligonoRecinto.length >= 1) {
-L.polyline(poligonoRecinto, {
-  color: rodapeInfo[1].cor,
-  weight: 2,
-  opacity: 0.8
-}).addTo(map)
-  .bindPopup("<strong>Área do Recinto</strong>");
-            }
+            L.polyline(poligonoRecinto, {
+              color: rodapeInfo[1].cor,
+              weight: 2,
+              opacity: 0.8
+            }).addTo(map)
+              .bindTooltip("<img src='https://cdn-icons-png.flaticon.com/512/15724/15724751.png' width='20' style='vertical-align:middle;margin-right:5px;'/>" +
+                              "<strong style='color:darkred;'>Polígono do Recinto</strong>",
+               {
+                permanent: false,
+                direction: "center",
+                className: "tooltip-transparent"
+              });
 
+              areas.forEach(area => {
+                if (area.coords.length >= 1) {
+                  //const info = getRodapeInfo(area.titulo);
+                  L.polygon(area.coords, {color: area.cor})
+                    .addTo(map)
+                    .bindTooltip(area.titulo, { 
+                                 permanent: false, 
+                                 direction: "center" , // centralizado
+                                 className: "polygon-label" // opcional para estilizar via CSS
+                                              })
+                    
+                    .openTooltip();
+                }
+              });                            
+/*
             // Área de posicionamento de veículos (polígono)
           
             if (poligonoAreaVeiculo.length >= 1) {
@@ -933,7 +958,7 @@ L.polyline(poligonoRecinto, {
                 className: "polygon-label" // opcional para estilizar via CSS
                   }).openTooltip();
             }     
-
+*/
             //Abre os pontos de um cluster
             if(markersCluster)
                 markersCluster.on('clusterclick', function (a) {
