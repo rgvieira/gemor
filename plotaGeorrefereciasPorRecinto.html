@@ -194,13 +194,13 @@
       const rodapeInfo = [
         { titulo: "Área:", icone: "", cor: 'navy' },                   
         { titulo: "Recinto", icone: "", cor: 'navy' },
-        { titulo: "Carga Solta", icone: "" , cor: 'purple'},      
+        { titulo: "Controle de Carga Solta", icone: "" , cor: 'purple'},      
         { titulo: "Conferência Física", icone: "" , cor: 'orange'},
-        { titulo: "Contêiner", icone: "", cor: 'red' },
-        { titulo: "Lotes", icone: "" , cor: 'green'},          
-        { titulo: "Portêiner", icone: "" , cor: 'black'},         
+        { titulo: "Posicionamento de Contêiner", icone: "", cor: 'red' },
+        { titulo: "Posicionamento de Veículo", icone: "" , cor: 'darkcyan'},        
+        { titulo: "Armazenamento de Lotes", icone: "" , cor: 'green'},          
+        { titulo: "Portêiner, Shiploader ou similares", icone: "" , cor: 'black'}
 
-        { titulo: "Veículo", icone: "" , cor: 'darkcyan'}
              ];                   
       // Mapas base gratuitos
         const baseMaps = {
@@ -868,13 +868,12 @@
 
             // Polígono do Recinto
             if (poligonoRecinto.length >= 1) {
-          
-              L.polyline(poligonoRecinto, {
-                color: rodapeInfo[1].cor,   // ✅ acesso direto
-                weight: 2,                  // espessura
-                opacity: 0.8                // transparência
-                // dashArray: '10, 10'      // tracejada (10px traço, 10px espaço)
-              }).addTo(map);
+L.polyline(poligonoRecinto, {
+  color: rodapeInfo[1].cor,
+  weight: 2,
+  opacity: 0.8
+}).addTo(map)
+  .bindPopup("<strong>Área do Recinto</strong>");
             }
 
             // Área de posicionamento de veículos (polígono)
