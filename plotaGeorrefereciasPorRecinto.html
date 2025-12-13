@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
     -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <!-- MarkerCluster CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.min.css" />
@@ -141,7 +142,10 @@
 
 <body>
   <p id="siglaRecinto"></p>
-    <!-- Ícone de upload -->
+   <!-- Ícone de upload -->
+  <!-- 
+   
+
      
   <label id="uploadIcon" for="fileCSV" title="Upload de arquivo csv contendo coordenadas">
 
@@ -151,7 +155,7 @@
     <br>
   <span style="font-size: 14px; color: navy;">Upload de arquivo csv contendo coordenadas</span>
   </label>
-
+-->
   <input type="file" id="fileCSV" accept=".csv">
 
   <div id="map"></div>
@@ -175,8 +179,276 @@
   <!-- MarkerCluster JS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.min.js"></script>
   <script>
-      let pontos = [];    
+      //Variáveis e constantes globais
+      const nivelZoom = 16;
+      const  precisaoAgrupamentoMinimo = 0;
+      const  precisaoAgrupamentoMaximo = 80;
+      // Estado da função
+      let clickEnabled = false;
+      isTracing = true; //Mostra dados na console
+      // Grupo de clusters
+      let markersCluster ;
+      let pontos = [{Tipo: "", Equipamento: "", Azimute: 0, Longitude: 0, Latitude: 0}
+                   ];      
+      // JSON com array de 5 itens
+      const rodapeInfo = [
+        { titulo: "Área:", icone: "", cor: 'navy' },                   
+        { titulo: "Recinto", icone: "", cor: 'navy' },
+        { titulo: "Carga Solta", icone: "" , cor: 'purple'},      
+        { titulo: "Conferência Física", icone: "" , cor: 'orange'},
+        { titulo: "Contêiner", icone: "", cor: 'red' },
+        { titulo: "Lotes", icone: "" , cor: 'green'},          
+        { titulo: "Portêiner", icone: "" , cor: 'black'},         
 
+        { titulo: "Veículo", icone: "" , cor: 'darkcyan'}
+             ];                   
+      // Mapas base gratuitos
+        const baseMaps = {
+          "OpenStreetMap": L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: "© OpenStreetMap"
+          }),
+          "Carto Light": L.tileLayer("https://cartodb-basemaps-a.global.ssl.fastly.net/light_all/{z}/{x}/{y}{r}.png", {
+            attribution: "© Carto"
+          }),
+          "Carto Dark": L.tileLayer("https://cartodb-basemaps-a.global.ssl.fastly.net/dark_all/{z}/{x}/{y}{r}.png", {
+            attribution: "© Carto"
+          }),
+          "Esri World": L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}", {
+            attribution: "Tiles © Esri"
+          }),
+          // ✅ Satélite Esri
+          "Esri Satellite": L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+            attribution: "Tiles © Esri & the GIS community"
+          })
+        };
+        // Ícones ideais para cada mapa
+        const baseMapIcons = {
+          "OpenStreetMap": "🗺️",       // mapa genérico
+          "Carto Light": "🌞",          // estilo claro
+          "Carto Dark": "🌙",           // estilo escuro
+          "Esri World": "🌍",           // mapa de ruas/mundo
+          "Esri Satellite": "🛰️"       // satélite
+        };      
+      //Mapa
+       let map;
+    
+      initMapa();
+      plotarPontosMapa(pontos);
+
+      //Função inicializar mapa
+      function initMapa() {
+        if(isTracing) console.log('InitMapa');
+          // Inicializa o mapa com OpenStreetMap
+          map = L.map("map", {
+            center: [-15.7797 , -47.9297], // Brasília
+            zoom: 6,
+            layers: [baseMaps["OpenStreetMap"]]
+          });     
+          map.setView([-15.7797, -47.9297], 6)
+
+          ////////////////////////////////
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+          }).addTo(map);
+
+          // Evento de clique no mapa - mostra coordenadas
+          /*
+          map.on("click", function(e) {
+            const lat = e.latlng.lat;
+            const lng = e.latlng.lng;
+
+            // Referência: centro do mapa (pode ser outro ponto fixo)
+            const centro = map.getCenter();
+            const azimute = calcularAzimute(centro.lat, centro.lng, lat, lng);
+
+            // gera o gráfico do azimute
+            const canvas = gerarGraficoAzimute(azimute);
+
+            // cria um container para texto + canvas
+            const container = document.createElement("div");
+            container.innerHTML = `
+              <b>Coordenadas:</b><br>
+              Latitude: ${lat.toFixed(6)}<br>
+              Longitude: ${lng.toFixed(6)}<br>
+              Azimute em relação ao norte: ${azimute.toFixed(2)}°
+              <br><br>
+            `;
+            container.appendChild(canvas);
+
+            L.popup()
+              .setLatLng(e.latlng)
+              .setContent(container)
+              .openOn(map);
+          });
+*/
+          // Função de clique no mapa
+          function onMapClick(e) {
+            const lat = e.latlng.lat;
+            const lng = e.latlng.lng;
+
+            const centro = map.getCenter();
+            const azimute = calcularAzimute(centro.lat, centro.lng, lat, lng);
+
+            const canvas = gerarGraficoAzimute(azimute);
+
+            const container = document.createElement("div");
+            container.innerHTML = `
+              <b>Coordenadas:</b><br>
+              Latitude: ${lat.toFixed(6)}<br>
+              Longitude: ${lng.toFixed(6)}<br>
+              Azimute em relação ao norte: ${azimute.toFixed(2)}°
+              <br><br>
+            `;
+            container.appendChild(canvas);
+
+            L.popup()
+              .setLatLng(e.latlng)
+              .setContent(container)
+              .openOn(map);
+          }
+
+          // Controle personalizado
+          const ToggleCoordsControl = L.Control.extend({
+            options: { position: "topright" },
+
+            onAdd: function () {
+              const container = L.DomUtil.create("div", "leaflet-bar leaflet-control leaflet-control-custom");
+
+              // Ícone FontAwesome (ex.: localização cruzada)
+              container.innerHTML = '<i class="fa-solid fa-crosshairs"></i>';
+              container.style.backgroundColor = "white";
+              container.style.cursor = "pointer";
+              container.style.fontSize = "18px";
+              container.style.textAlign = "center";
+              container.style.lineHeight = "30px";
+              container.style.width = "30px";
+              container.style.height = "30px";
+
+              container.onclick = function () {
+                if (clickEnabled) {
+                  map.off("click", onMapClick);
+                  clickEnabled = false;
+                  container.style.backgroundColor = "white"; // desligado
+                } else {
+                  map.on("click", onMapClick);
+                  clickEnabled = true;
+                  container.style.backgroundColor = "#cce5ff"; // ligado
+                }
+              };
+
+              return container;
+            }
+          });
+
+          // Adicionar controle ao mapa
+          map.addControl(new ToggleCoordsControl());
+
+////
+          // cria controle de upload dentro do mapa
+          const UploadControl = L.Control.extend({
+            options: { position: 'topright' },
+            onAdd: function () {
+              const container = L.DomUtil.create('div', 'leaflet-control-upload');
+              container.innerHTML = `
+                <label for="fileCSV" title="Selecionar arquivo CSV">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M5 20h14v-2H5v2zm7-18l-7 7h4v6h6v-6h4l-7-7z"/>
+                  </svg>
+                </label>
+              `;
+              return container;
+            }
+          });
+          map.addControl(new UploadControl());
+
+          // evento de upload
+          document.getElementById("fileCSV").addEventListener("change", (event) => {
+            const arquivo = event.target.files[0];
+            if (!arquivo) return;
+
+            const reader = new FileReader();
+            reader.onload = () => {
+              pontos = csvParaJson(reader.result);
+
+              //setPontos(pontos);
+              event.target.value = ""; // limpa para permitir re-seleção
+            };
+            reader.readAsText(arquivo);
+          });
+          //Popup seletor de tipo de mapa. Aparece no canto superior direito
+          const MapSelector = L.Control.extend({
+            options: { position: "topright" },
+            onAdd: function () {
+              const container = L.DomUtil.create("div", "leaflet-bar leaflet-control leaflet-control-custom");
+
+              container.innerHTML = `
+                <img src="https://cdn-icons-png.flaticon.com/512/854/854878.png" 
+                    alt="map icon" style="width:24px;height:24px;">
+              `;
+
+              // estilo de botão 3D
+              container.style.background = "linear-gradient(180deg, #2196F3, #1565C0)"; // azul com gradiente
+              container.style.border = "1px solid #0D47A1";
+              container.style.borderRadius = "6px";
+              container.style.cursor = "pointer";
+              container.style.padding = "5px";
+              container.style.boxShadow = "0 4px #0D47A1"; // sombra sólida abaixo
+              container.style.transition = "all 0.2s ease";
+
+              // efeito ao clicar
+              container.onmousedown = function () {
+                container.style.boxShadow = "0 2px #0D47A1";
+                container.style.transform = "translateY(2px)";
+              };
+              container.onmouseup = function () {
+                container.style.boxShadow = "0 4px #0D47A1";
+                container.style.transform = "translateY(0)";
+              };
+
+              // Evita que o clique no controle arraste o mapa
+              L.DomEvent.disableClickPropagation(container);
+
+              // Ao clicar, abre popup com opções
+              container.onclick = function () {
+                let html = "<b>Selecione o mapa:</b><br>";
+                Object.keys(baseMaps).forEach(nome => {
+                  const icon = baseMapIcons[nome] || "🗺️"; // fallback
+                  html += `<div style="cursor:pointer; margin:3px; color:blue;" 
+                            onclick="window.setBaseMap('${nome}')">${icon} ${nome}</div>`;
+                });
+                L.popup()
+                  .setLatLng(map.getCenter())
+                  .setContent(html)
+                  .openOn(map);
+              };
+
+              return container;
+            }
+          });
+          
+          map.addControl(new MapSelector());
+
+          // Função global para trocar mapa base
+          window.setBaseMap = function (nome) {
+            map.eachLayer(layer => {
+              if (layer instanceof L.TileLayer) {
+                map.removeLayer(layer);
+              }
+            });
+            baseMaps[nome].addTo(map);
+          };
+          // Grupo de clusters
+          markersCluster = L.markerClusterGroup({
+                             spiderfyOnEveryZoom: false, // não fechar ao dar zoom
+                             removeOutsideVisibleBounds: false, // mantém clusters fora da área visível
+                             disableClusteringAtZoom: null, // mantém agrupamento
+                             maxClusterRadius: function (zoom) {
+                                              return zoom < 10 ? precisaoAgrupamentoMaximo: precisaoAgrupamentoMinimo;
+                                                               }
+                                  });
+
+
+      }
         // Função que converte CSV em JSON
         function csvParaJson(csvTexto) {
        
@@ -194,7 +466,7 @@
           });
         }
         function lerCSV(arquivo) {
-        
+          if(isTracing) console.log('lerCSV')       
           return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = () => {
@@ -214,16 +486,17 @@
           });
         }
 
-        document.getElementById("fileCSV").addEventListener("change", async (event) => {
-          const arquivo = event.target.files[0];
-          if (!arquivo) return;
-         
-          await lerCSV(arquivo);
+          document.getElementById("fileCSV").addEventListener("change", async (event) => {
+            if(isTracing) console.log('getElementById');
+            const arquivo = event.target.files[0];
+            if (!arquivo) return;
+          
+            await lerCSV(arquivo);
 
-          plotarPontosMapa(pontos);
+            plotarPontosMapa(pontos);
         });
 
-       function getArrayIcones() {
+        function getArrayIcones() {
           let arrayIcones = [
                               {tipo: "Recinto (ponto)" , url: "escala-industrial.png",icone:"https://cdn-icons-png.flaticon.com/128/684/684908.png" },
                               {tipo: "Balança (ponto)" , url: "escala-industrial.png",icone:"https://cdn-icons-png.flaticon.com/512/8248/8248483.png" },
@@ -251,7 +524,7 @@
           return arrayIcones                  
        }
 
-       function getIcone(icone,azimute) {
+        function getIcone(icone,azimute) {
 
             let arrayIcones = getArrayIcones();
             let retorno = 'https://cdn-icons-png.flaticon.com/512/7199/7199765.png';
@@ -271,7 +544,7 @@
             return retorno;   
        }
 
-       function getPrimeiraOcorrencia(coord) {
+        function getPrimeiraOcorrencia(coord) {
 
            let vetor = coord.split( ' - ')
 
@@ -279,63 +552,71 @@
            return vetor[0]
 
        }
-      // Função que desenha gráfico de azimute em canvas
-      
+        // Função que desenha gráfico de azimute em canvas
 
-     function gerarGraficoAzimute(angulo) {
+        function gerarGraficoAzimute(azimute) {
           const canvas = document.createElement("canvas");
-          canvas.width = 200;
-          canvas.height = 200;
+          canvas.width = 220;
+          canvas.height = 220;
           const ctx = canvas.getContext("2d");
 
-          // círculo principal
+          // fundo
+          ctx.fillStyle = "#f9f9f9";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+          // círculo da bússola
           ctx.beginPath();
-          ctx.arc(100, 100, 80, 0, 2 * Math.PI);
-          ctx.stroke();
-
-          // marcações principais (N, E, S, W)
-          ctx.font = "14px Arial";
-          ctx.textAlign = "center";
-          ctx.fillText("N", 100, 25);
-          ctx.fillText("E", 175, 105);
-          ctx.fillText("S", 100, 185);
-          ctx.fillText("W", 25, 105);
-
-          // marcações adicionais dos ângulos
-          const angulos = [0, 45, 90, 135, 180, 225, 280, 325];
-          angulos.forEach(a => {
-              const rad = (a - 90) * Math.PI / 180; // ajustar para canvas
-              const x = 100 + 90 * Math.cos(rad);   // raio um pouco maior que a seta
-              const y = 100 + 90 * Math.sin(rad);
-              ctx.fillText(a.toString(), x, y);
-          });
-
-          // seta indicando o azimute
-          const rad = (angulo - 90) * Math.PI / 180; // ajustar para canvas
-          const x = 100 + 70 * Math.cos(rad);
-          const y = 100 + 70 * Math.sin(rad);
-
-          ctx.beginPath();
-          ctx.moveTo(100, 100);
-          ctx.lineTo(x, y);
-          ctx.strokeStyle = "red";
+          ctx.arc(110, 110, 80, 0, 2 * Math.PI);
+          ctx.strokeStyle = "#333";
           ctx.lineWidth = 2;
           ctx.stroke();
 
-          // se azimute for diferente de zero, acrescenta círculo na extremidade
-          if (angulo !== 0) {
-              ctx.beginPath();
-              ctx.arc(x, y, 5, 0, 2 * Math.PI); // círculo pequeno
-              ctx.strokeStyle = "red";
-              ctx.lineWidth = 2;
-              ctx.stroke();
+          // ângulos de 45 em 45 graus
+          ctx.fillStyle = "black";
+          ctx.font = "bold 8px Arial";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+
+          for (let angle = 0; angle < 360; angle += 45) {
+            const rad = (angle - 90) * Math.PI / 180;
+            const x = 110 + 70 * Math.cos(rad);
+            const y = 110 + 70 * Math.sin(rad);
+            ctx.fillText(angle + "°", x, y);
           }
 
+          // direções principais N, S, L, O em azul, fora do círculo
+          ctx.fillStyle = "blue";
+          ctx.font = "bold 14px Arial";
+
+          const offset = 95; // raio maior para jogar as letras para fora
+
+          // Norte (0°)
+          ctx.fillText("N", 110, 110 - offset);
+          // Sul (180°)
+          ctx.fillText("S", 110, 110 + offset);
+          // Leste (90°)
+          ctx.fillText("L", 110 + offset, 110);
+          // Oeste (270°)
+          ctx.fillText("O", 110 - offset, 110);
+
+          // desenhar linha do azimute
+          const radAz = (azimute - 90) * Math.PI / 180;
+          const xAz = 110 + 70 * Math.cos(radAz);
+          const yAz = 110 + 70 * Math.sin(radAz);
+
+          ctx.beginPath();
+          ctx.moveTo(110, 110);
+          ctx.lineTo(xAz, yAz);
+          ctx.strokeStyle = "red";
+          ctx.lineWidth = 3;
+          ctx.stroke();
+
           return canvas;
-      }
+        }
 
-
-        // Função para calcular azimute em relação ao norte verdadeiro
+      
+  
+      // Função para calcular azimute em relação ao norte verdadeiro
         function calcularAzimute(lat1, lon1, lat2, lon2) {
           // Converter graus para radianos
           const toRad = deg => deg * Math.PI / 180;
@@ -369,12 +650,12 @@
           return [[lat, lon], [lat1, lon1], [lat2, lon2]];
         }
        
-
         function getCoordenada(coordenada) {
              
           if(typeof coordenada === 'string') coordenada = parseFloat(coordenada)
           return coordenada;
         }
+ 
         function contarRecintos(pontos) {
             let contador = 0;
             for (let ix = 0; ix < pontos.length; ix++) {
@@ -384,207 +665,18 @@
             }
             return contador;
         }
+        function setPontos(pontos){
+            pontos = pontos;
+        }  
+
         function plotarPontosMapa(pontos) {
+          if(isTracing) console.log('plotarPontosMapa',pontos);
 
-            // ✅ esconder input e label após leitura
-            document.getElementById("fileCSV").style.display = "none";
-            document.getElementById("uploadIcon").style.display = "none";
-            //Recinto - Dados devem ser passados 
-            
-            let nomeRecinto = pontos[0].NomeRecinto;
-            let latitudeRecinto = pontos[0].LatitudeRecinto;
-            let longitudeRecinto = pontos[0].LongitudeRecinto;
-            let codRecinto = pontos[0].CódigoRecinto;
-            
-            // Mapas base gratuitos
-            const baseMaps = {
-              "OpenStreetMap": L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-                attribution: "© OpenStreetMap"
-              }),
-              "Carto Light": L.tileLayer("https://cartodb-basemaps-a.global.ssl.fastly.net/light_all/{z}/{x}/{y}{r}.png", {
-                attribution: "© Carto"
-              }),
-              "Carto Dark": L.tileLayer("https://cartodb-basemaps-a.global.ssl.fastly.net/dark_all/{z}/{x}/{y}{r}.png", {
-                attribution: "© Carto"
-              }),
-              "Esri World": L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}", {
-                attribution: "Tiles © Esri"
-              }),
-              // ✅ Satélite Esri
-              "Esri Satellite": L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
-                attribution: "Tiles © Esri & the GIS community"
-              })
-            };
-            // Ícones ideais para cada mapa
-            const baseMapIcons = {
-              "OpenStreetMap": "🗺️",       // mapa genérico
-              "Carto Light": "🌞",          // estilo claro
-              "Carto Dark": "🌙",           // estilo escuro
-              "Esri World": "🌍",           // mapa de ruas/mundo
-              "Esri Satellite": "🛰️"       // satélite
-            };
-
+    
+ 
             // Ícones da web
             arrayIcones = []
-
-
-            latitudeRecinto = latitudeRecinto ? latitudeRecinto : parseFloat(-20.329); 
-            longitudeRecinto = longitudeRecinto ? longitudeRecinto : parseFloat(-40.292); 
-          
-            const nivelZoom = 16;
-            const  precisaoAgrupamentoMinimo = 0;
-            const  precisaoAgrupamentoMaximo = 80; 
-            
-
-            // Inicializa o mapa com OpenStreetMap
-            const map = L.map("map", {
-              center: [latitudeRecinto, longitudeRecinto], // Vila Velha/ES
-              zoom: 12,
-              layers: [baseMaps["OpenStreetMap"]]
-            });      
-            
-            ////////////////////////////////
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-              attribution: '© OpenStreetMap contributors'
-            }).addTo(map);
-
-            // Evento de clique no mapa - mostra coordenadas
-            map.on("click", function(e) {
-              const lat = e.latlng.lat;
-              const lng = e.latlng.lng;
-
-              // Referência: centro do mapa (pode ser outro ponto fixo)
-              const centro = map.getCenter();
-              const azimute = calcularAzimute(centro.lat, centro.lng, lat, lng);
-
-              // gera o gráfico do azimute
-              const canvas = gerarGraficoAzimute(azimute);
-
-              // cria um container para texto + canvas
-              const container = document.createElement("div");
-              container.innerHTML = `
-                <b>Coordenadas:</b><br>
-                Latitude: ${lat.toFixed(6)}<br>
-                Longitude: ${lng.toFixed(6)}<br>
-                Azimute em relação ao norte: ${azimute.toFixed(2)}°
-                <br><br>
-              `;
-              container.appendChild(canvas);
-
-              L.popup()
-                .setLatLng(e.latlng)
-                .setContent(container)
-                .openOn(map);
-            });
-
-            // cria controle de upload dentro do mapa
-            const UploadControl = L.Control.extend({
-              options: { position: 'topright' },
-              onAdd: function () {
-                const container = L.DomUtil.create('div', 'leaflet-control-upload');
-                container.innerHTML = `
-                  <label for="fileCSV" title="Selecionar arquivo CSV">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                      <path d="M5 20h14v-2H5v2zm7-18l-7 7h4v6h6v-6h4l-7-7z"/>
-                    </svg>
-                  </label>
-                `;
-                return container;
-              }
-            });
-            map.addControl(new UploadControl());
-
-            // evento de upload
-            document.getElementById("fileCSV").addEventListener("change", (event) => {
-              const arquivo = event.target.files[0];
-              if (!arquivo) return;
-
-              const reader = new FileReader();
-              reader.onload = () => {
-                pontos = csvParaJson(reader.result);
-
-                usarPontos();
-                event.target.value = ""; // limpa para permitir re-seleção
-              };
-              reader.readAsText(arquivo);
-            });
-            //Popup seletor de tipo de mapa. Aparece no canto superior direito
-            const MapSelector = L.Control.extend({
-              options: { position: "topright" },
-              onAdd: function () {
-                const container = L.DomUtil.create("div", "leaflet-bar leaflet-control leaflet-control-custom");
-
-                container.innerHTML = `
-                  <img src="https://cdn-icons-png.flaticon.com/512/854/854878.png" 
-                      alt="map icon" style="width:24px;height:24px;">
-                `;
-
-                // estilo de botão 3D
-                container.style.background = "linear-gradient(180deg, #2196F3, #1565C0)"; // azul com gradiente
-                container.style.border = "1px solid #0D47A1";
-                container.style.borderRadius = "6px";
-                container.style.cursor = "pointer";
-                container.style.padding = "5px";
-                container.style.boxShadow = "0 4px #0D47A1"; // sombra sólida abaixo
-                container.style.transition = "all 0.2s ease";
-
-                // efeito ao clicar
-                container.onmousedown = function () {
-                  container.style.boxShadow = "0 2px #0D47A1";
-                  container.style.transform = "translateY(2px)";
-                };
-                container.onmouseup = function () {
-                  container.style.boxShadow = "0 4px #0D47A1";
-                  container.style.transform = "translateY(0)";
-                };
-
-                // Evita que o clique no controle arraste o mapa
-                L.DomEvent.disableClickPropagation(container);
-
-                // Ao clicar, abre popup com opções
-                container.onclick = function () {
-                  let html = "<b>Selecione o mapa:</b><br>";
-                  Object.keys(baseMaps).forEach(nome => {
-                    const icon = baseMapIcons[nome] || "🗺️"; // fallback
-                    html += `<div style="cursor:pointer; margin:3px; color:blue;" 
-                              onclick="window.setBaseMap('${nome}')">${icon} ${nome}</div>`;
-                  });
-                  L.popup()
-                    .setLatLng(map.getCenter())
-                    .setContent(html)
-                    .openOn(map);
-                };
-
-                return container;
-              }
-            });
-            
-            map.addControl(new MapSelector());
-
-            // Função global para trocar mapa base
-            window.setBaseMap = function (nome) {
-              map.eachLayer(layer => {
-                if (layer instanceof L.TileLayer) {
-                  map.removeLayer(layer);
-                }
-              });
-              baseMaps[nome].addTo(map);
-            };
-
-            // Grupo de clusters
-            let markersCluster = L.markerClusterGroup(
-                                      {
-                                        spiderfyOnEveryZoom: false, // não fechar ao dar zoom
-                                        removeOutsideVisibleBounds: false, // mantém clusters fora da área visível
-                                        disableClusteringAtZoom: null, // mantém agrupamento
-                                                                      maxClusterRadius: function (zoom) {
-                                                return zoom < 10 ? precisaoAgrupamentoMaximo: precisaoAgrupamentoMinimo;
-
-                                                                          }
-                                      
-                                    }
-                                    );
-
+ 
             // Array para armazenar coordenadas das casas
             let poligonoRecinto = []; 
             let poligonoAreaVeiculo = []; 
@@ -750,16 +842,17 @@
                       const div = document.createElement("div");
                       
                       div.innerHTML = `
-                        <ul style="padding-left: 15px; margin: 0;">
-                          <strong>${p.Tipo}</strong>
-                          <li>${p.Equipamento}</li>
-                         
-                          ${p.Azimute ? `<li>Azimute: ${p.Azimute}</li>` : ""}                                             
-                          <li>Latitude: ${(parseFloat(getCoordenada(getPrimeiraOcorrencia(p.Latitude))))}</li>
-                          <li>Longitude: ${(parseFloat(getCoordenada(getPrimeiraOcorrencia(p.Longitude))))}</li>
+                        <strong style="color: blue;">${p.Tipo}</strong>
+                          <ul style="padding-left: 15px; margin: 0;">
+                            <li>${p.Equipamento}</li>
+                            <li>Latitude: ${parseFloat(getCoordenada(getPrimeiraOcorrencia(p.Latitude)))}</li>
+                            <li>Longitude: ${parseFloat(getCoordenada(getPrimeiraOcorrencia(p.Longitude)))}</li>
 
-                        </ul>
+                            ${p.Azimute ? `<li>Azimute: ${p.Azimute}</li>` : ""}
+                          </ul>
+                      
                       `;
+
                       if (p.Azimute) {
                         div.appendChild(gerarGraficoAzimute(p.Azimute));
                       }
@@ -770,21 +863,8 @@
                 
                }
             }
-
-            map.addLayer(markersCluster);
-
-            // JSON com array de 5 itens
-            const rodapeInfo = [
-              { titulo: "Área:", icone: "", cor: 'navy' },                   
-              { titulo: "Recinto", icone: "", cor: 'navy' },
-              { titulo: "Carga Solta", icone: "" , cor: 'purple'},      
-              { titulo: "Conferência Física", icone: "" , cor: 'orange'},
-              { titulo: "Contêiner", icone: "", cor: 'red' },
-              { titulo: "Lotes", icone: "" , cor: 'green'},          
-              { titulo: "Portêiner", icone: "" , cor: 'black'},         
-      
-              { titulo: "Veículo", icone: "" , cor: 'darkcyan'}
-            ];
+             
+            if(markersCluster) map.addLayer(markersCluster);
 
             // Polígono do Recinto
             if (poligonoRecinto.length >= 1) {
@@ -856,37 +936,29 @@
             }     
 
             //Abre os pontos de um cluster
-            
-            markersCluster.on('clusterclick', function (a) {
-              a.layer.spiderfy(); // abre o cluster
-              a.originalEvent.preventDefault(); // evita comportamento padrão
-            });
+            if(markersCluster)
+                markersCluster.on('clusterclick', function (a) {
+                  a.layer.spiderfy(); // abre o cluster
+                  a.originalEvent.preventDefault(); // evita comportamento padrão
+                });
 
-
-            markersCluster.on('clusteringend', function () {
-              markersCluster.getLayers().forEach(layer => {
-                if (layer.spiderfy) layer.spiderfy();
-              });
-            });
-/*
-            // Controle personalizado
-            const footer = L.control({position: 'bottomleft'});
-            footer.onAdd = function () {
-              const div = L.DomUtil.create('div', 'map-footer');
-              div.innerHTML = rodapeInfo.map(item => `
-                <div class="map-footer-item" style="color:${item.cor};">
-                  <span><strong>${item.titulo}</strong></span>
-                </div>
-              `).join("");
-              return div;
-            };
-
-            footer.addTo(map);  
-            */
-
+            if(markersCluster)
+               markersCluster.on('clusteringend', function () {
+                    markersCluster.getLayers().forEach(layer => {
+                      if (layer.spiderfy) layer.spiderfy();
+                    });
+                  });
 
             // Ajusta o zoom para mostrar tudo
-            map.fitBounds(markersCluster.getBounds(), { padding: [30, 30] });
+     
+            if(!markersCluster.getBounds().isValid()) {
+              var bounds = L.latLngBounds([[-15.78, -47.93], [-15.75, -47.90]]);
+              
+              map.fitBounds(bounds);  
+              map.setZoom(6);    
+            } else 
+            if(markersCluster)
+               map.fitBounds(markersCluster.getBounds(), { padding: [30, 30] });
         }
  
 

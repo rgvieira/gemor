@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
-  <title>Exemplo Modal Dinâmico</title>
+  <title>Menu Principal</title>
   <style>
     body { font-family: Inter, sans-serif; margin:0; padding:20px; background:#0f172a; color:#e5e7eb; }
     .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
@@ -96,17 +96,48 @@
             </div>
             <div class="modal-main">
               <h2 id="intro">Introdução</h2>
+              <p>Mapa geográfico contendo os ativos de recintos alfandegados, enviados a API-Recintos, evento Georreferenciamento.</p>
+
               <p>Para executar esta página em dispositivos móveis, celulares, tablets, etc, é preciso obter previamente arquivo csv contendo coordenadas dos ativos a serem plotados.</p>
               <h2 id="csv">Arquivo CSV</h2>
-              <p>Arquivo csv é gerado pelo aplicativo Gemor no Analytics/ContÁgil, devendo ser copiado para o dispositivo móvel. No ícone de upload, informe o arquivo csv.</p>
+              <p>Arquivo csv é gerado pelo aplicativo Gemor no Analytics/ContÁgil, devendo ser copiado para o dispositivo móvel. </p>
               <p>No ícone de upload, informe o arquivo csv, quando solicitado.</p>
               <h2 id="mapa">Mapa</h2>
-                <ul><li>Zoom: canto superior esquerdo</li>
-                    <li>Upload: canto superior direito</li>
-                     <li>Ao clicar em um local sem ícones, coordenadas são apresentadas.</li>
-                     <li>Círculos numerados são agrupamentos de ativos.</li>
-                     <li>Os demais ícones representam os ativos.</li>
-                     <li>São plotados polígonos das seguintes áreas.</li>
+                <ul>
+
+                   <ul style="padding-left: 15px; margin: 0; list-style: none;">
+                        <li>
+                          <img src="https://cdn-icons-png.flaticon.com/512/5640/5640350.png " alt="Zoom" width="20" style="vertical-align: middle;"/>
+                          <strong>Zoom</strong> – Canto superior esquerdo.
+                        </li>
+                        <li>
+                          <img src="https://cdn-icons-png.flaticon.com/512/889/889727.png" alt="Coordenadas" width="20" style="vertical-align: middle;"/>
+                          <strong>Coordenadas</strong> – Canto superior direito. Liga/Desliga apresentação de coordenadas.
+                        </li>
+                        <li>
+                          <img src="https://cdn-icons-png.flaticon.com/128/2810/2810451.png" alt="Upload" width="20" style="vertical-align: middle;"/>
+                          <strong>Upload</strong> – Canto superior direito. Atualizar as coordenadas a serem plotadas.
+                        </li>
+                        <li>
+                          <img src="https://cdn-icons-png.flaticon.com/512/854/854878.png" alt="Mapa" width="20" style="vertical-align: middle;"/>
+                          <strong>Mapa</strong> – Canto superior direito. Apresenta opções de diferentes mapas.
+                        </li>
+                        <li>
+                          <img src="https://cdn-icons-png.flaticon.com/512/535/535239.png" alt="Clique" width="20" style="vertical-align: middle;"/>
+                          Ao clicar em um local sem ícones, coordenadas são apresentadas.
+                        </li>
+                        <li>
+                          <img src="https://cdn-icons-png.flaticon.com/512/108/108933.png" alt="Círculos numerados" width="20" style="vertical-align: middle;"/>
+                          Círculos numerados são agrupamentos de ativos.
+                        </li>
+                        <li>
+                          <img src="https://cdn-icons-png.flaticon.com/512/2311/2311340.png" alt="Ícones ativos" width="20" style="vertical-align: middle;"/>
+                          Os demais ícones representam os ativos.
+                        </li>
+                        <li>
+                          <img src="https://cdn-icons-png.flaticon.com/512/15724/15724751.png" alt="Polígonos" width="20" style="vertical-align: middle;"/>
+                          São plotados polígonos das seguintes áreas.
+                        </li>
                         <ul>
                             <li>Recinto</li>
                             <li>Armazenamento de Lotes</li>
@@ -122,11 +153,16 @@
                     </ul>
               <h2 id="can">Câmeras de Segurança</h2>
                 <ul>
+                  <li>
+                      <img src="https://cdn-icons-png.flaticon.com/512/10682/10682215.png" alt="Fixa" width="20" style="vertical-align: middle;"/>
+                       <img src="https://cdn-icons-png.flaticon.com/512/9716/9716309.png" alt="Dome" width="20" style="vertical-align: middle;"/>
+          
+                  </li>
                   <li>Câmeras são fixas, podendo ter zoom, ou móveis, devendo ser PTZ.</li>
-                  <li>As câmeras fixas devem ter azimute.</li>
+                  <li>As fixas devem ter azimute informado.</li>
                   <li>Não tendo sido informado azimute, subentendemos ser dome.</li>
                   <li>Para as câmeras fixas, são apresentados triângulos orientados, segundo o azimute informado na API Recintos.</li>
-                  <li>Círculos numerados são agrupamentos de ativos.</li>
+                  
                 </ul>                
               <h2 id="api">API Recintos</h2>
               <p>É preciso ter cuidado quando do envio de ocorrências à API Recintos.</p>
