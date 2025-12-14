@@ -227,9 +227,10 @@
 
   </div>
   <div id="map-title"></div>
-  <div id="painelTabela" class="painel-tabela">
+
+  <div id="painelTabela" class="painel-tabela" style="display:none;">
     <span class="fechar" onclick="document.getElementById('painelTabela').style.display='none'">X</span>
-    <!-- tabela será injetada aqui -->
+    <div class="conteudo"></div>
   </div>
 
 
@@ -376,7 +377,12 @@
         .addTo(map)
         .bindPopup(`<div style="color:darkred;"><strong>Marcador em:</strong><br>Lat: ${lat}<br>Lng: ${lng}</div>`)
         .openPopup();
-      map.setView([lat, lng], 15);
+          map.setView([lat, lng], 15);
+            // ✅ Fecha o painel lateral após plotar
+        const painel = document.getElementById("painelTabela");
+        if (painel) {
+          painel.style.display = "none";
+        }
     }
 
     // Controle Leaflet para abrir/fechar painel
@@ -390,38 +396,38 @@
         btn.title = "Apresenta/oculta tabela de Coordenadas";
         L.DomEvent.disableClickPropagation(btn);
 
-        btn.onclick = function() {
-          const painel = document.getElementById("painelTabela");
-          if (painel.style.display === "none" || painel.style.display === "") {
-            const html = gerarTabelaHTML(pontos);
-            if (html === "") return;
-            painel.innerHTML = '<span class="fechar" onclick="document.getElementById(\'painelTabela\').style.display=\'none\'">X</span>' + html;
-            painel.style.display = "block";
+    btn.onclick = function() {
+      const painel = document.getElementById("painelTabela");
+      if (painel.style.display === "none" || painel.style.display === "") {
+        const htmlTabela = gerarTabelaHTML(pontos);
+        if (htmlTabela === "") return;
+        painel.querySelector(".conteudo").innerHTML = htmlTabela; // só atualiza a parte da tabela
+        painel.style.display = "block";
 
-            // Inicializa DataTable
-            setTimeout(() => {
-              const tabela = document.querySelector("#tabelaPonto");
-              if (tabela) {
-                new DataTable(tabela, {
-                  searchable: true,
-                  sortable: true,
-                  perPage: 15,
-                  labels: {
-                    placeholder: "Buscar...",
-                    perPage: "{select} registros por página",
-                    noRows: "Nenhum registro encontrado",
-                    info: "Mostrando {start} até {end} de {rows} registros"
-                  }
-                });
+        // Inicializa DataTable
+        setTimeout(() => {
+          const tabela = document.querySelector("#tabelaPonto");
+          if (tabela) {
+            new DataTable(tabela, {
+              searchable: true,
+              sortable: true,
+              perPage: 15,
+              labels: {
+                placeholder: "Buscar...",
+                perPage: "{select} registros por página",
+                noRows: "Nenhum registro encontrado",
+                info: "Mostrando {start} até {end} de {rows} registros"
               }
-            }, 200);
-          } else {
-            painel.style.display = "none";
+            });
           }
-        };
-        return btn;
-      },
-      onRemove: function(map) {}
+        }, 200);
+      } else {
+        painel.style.display = "none";
+      }
+    };
+    return btn;
+        },
+        onRemove: function(map) {}
     });
 
     map.addControl(new L.Control.Excel({ position: "topright" }));
@@ -432,7 +438,7 @@
           map = L.map("map", {
             center: [-15.7797 , -47.9297], // Brasília
             zoom: 6,                 // zoom inicial
-            minZoom: 1,               // zoom mínimo permitido
+            minZoom: 0,               // zoom mínimo permitido
             maxZoom: 20,              // zoom máximo permitido            
             layers: [baseMaps["OpenStreetMap"]]
           });     
@@ -638,26 +644,25 @@
 
       }
    
-        
-        function plotarNoMapa(lat, lng) {
-            if (!lat || !lng) {
-              alert("Coordenadas inválidas!");
-              return;
-            }
-            L.marker([lat, lng])
-              .addTo(map)
-              .bindPopup(`
-                <div style="color:darkred;">
-                  <strong>Coordenada:</strong><br>
-                  Lat: ${lat}<br>
-                  Lng: ${lng}
-                </div>
-              `)
-              .openPopup();
+              
+      function plotarNoMapa(lat, lng) {
+        L.marker([lat, lng])
+          .addTo(map)
+          .bindPopup(`<div style="color:darkred;">
+                        <strong>Marcador em:</strong><br>
+                        Lat: ${lat}<br>
+                        Lng: ${lng}
+                      </div>`)
+          .openPopup();
 
-            // opcional: centralizar o mapa no ponto
-            map.setView([lat, lng], 15);
+        map.setView([lat, lng], 15);
+
+        // ✅ Fecha o painel lateral após plotar
+        const painel = document.getElementById("painelTabela");
+        if (painel) {
+          painel.style.display = "none";
         }
+      }
 
 
         // Função que converte CSV em JSON
