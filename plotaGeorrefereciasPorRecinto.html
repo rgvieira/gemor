@@ -23,13 +23,14 @@
       padding: 0;
     }
    /* Ícone fixo no meio do canto direito */
+
     #flaticon-icon {
-      position: fixed;
-       bottom: 20px;   /* 1 cm antes do rodapé */
-      right: 10px;
-      z-index: 2000; /* acima do mapa */
-      cursor: pointer;
+      position: absolute;   /* fixa na tela */
+      bottom: 10px;      /* distância da borda inferior */
+      right: 10px;       /* distância da borda direita */
+      z-index: 10000;     /* garante que fique acima do mapa/outros elementos */
     }
+
 
     #flaticon-icon img {
       width: 32px;
@@ -38,6 +39,7 @@
     #map {
       height: 100%;
       width: 100%;
+      position: relative;
     }
     #map-title {
       position: absolute;
@@ -213,22 +215,25 @@
 
   <input type="file" id="fileCSV" accept=".csv">
 
-  <div id="map"></div>
+  <div id="map">
+      <div id="flaticon-icon">
+        <a href="https://www.flaticon.com/br/" title="Flaticon" target="_blank">
+          <img 
+            src="https://www.flaticon.com/media/img/flaticon-logo.svg"
+            alt="Flaticon logo">
+        </a>
+        <div id="flaticon-icon"></div>
+      </div>
+
+  </div>
   <div id="map-title"></div>
   <div id="painelTabela" class="painel-tabela">
     <span class="fechar" onclick="document.getElementById('painelTabela').style.display='none'">X</span>
     <!-- tabela será injetada aqui -->
   </div>
 
-  <!-- Ícone do Flaticon no canto direito -->
-    <a href="https://www.flaticon.com/br/" 
-      title="Flaticon" target="_blank">
-      <img src="https://www.flaticon.com/media/img/flaticon-logo.svg" 
-          alt="Flaticon logo" style="width:32px;height:32px;">
-    </a>
-  </div>
 
-  <div id="flaticon-icon">
+  
     
   
 
@@ -432,7 +437,17 @@
             layers: [baseMaps["OpenStreetMap"]]
           });     
           map.setView([-15.7797, -47.9297], 6)
-
+          /* Valores mais comuns de zoom
+              🔹 Valores mais comuns
+              Zoom	Descrição
+              0	Mundo inteiro
+              5	País
+              10	Cidade
+              13	Bairro
+              16	Quadras
+              18	Rua
+              20–22	Detalhe máximo (depende do mapa)
+          */
           ////////////////////////////////
           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
