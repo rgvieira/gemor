@@ -90,18 +90,24 @@
                 <li><a href="#csv">Arquivo CSV</a></li>
                 <li><a href="#mapa">Mapa</a></li>
                 <li><a href="#api">API Recintos</a></li>
+                
                 <li><a href="#can">Câmeras de Segurança</a></li>
                 <li><a href="#obs">Observações</a></li>
               </ul>
             </div>
             <div class="modal-main">
               <h2 id="intro">Introdução</h2>
-              <p>Mapa geográfico contendo os ativos de recintos alfandegados, enviados a API-Recintos, evento Georreferenciamento.</p>
+              <p>Mapa geográfico contendo os ativos de recintos alfandegados, enviados a API-Recintos, evento <a href="https://docs.portalunico.siscomex.gov.br/api/rcnt/" target="_blank">
+                Georreferenciamento</a>.</p>
+              <p> Na página contendo a documentação, escolha Georreferenciamento em Grupo 1 - Controle de Áreas e Equipamentos. Em JSON do evento Georreferenciamento, clique em <strong>Model</strong> para as especificações pertinentes.</p>                
 
-              <p>Para executar esta página em dispositivos móveis, celulares, tablets, etc, é preciso obter previamente arquivo csv contendo coordenadas dos ativos a serem plotados.</p>
+              <p>Para executar o aplicativo em dispositivos móveis, celulares, tablets, etc, é preciso obter previamente arquivo csv contendo coordenadas dos ativos a serem plotados.</p>
               <h2 id="csv">Arquivo CSV</h2>
               <p>Arquivo csv é gerado pelo aplicativo Gemor no Analytics/ContÁgil, devendo ser copiado para o dispositivo móvel. </p>
+              <p>O conteúdo é a relação de ocorrências de Georreferenciamento, informados via API Recintos ao módulo Recintos. Vide  <a href="https://portalunico.siscomex.gov.br/tabx/#/tabelas" target="_blank">
+                Camex - Tabela Georreferenciamento.</a> </P>
               <p>No ícone de upload, informe o arquivo csv, quando solicitado.</p>
+
               <h2 id="mapa">Mapa</h2>
                 <ul>
 
@@ -123,6 +129,10 @@
                           <strong>Mapa</strong> – Canto superior direito. Apresenta opções de diferentes mapas.
                         </li>
                         <li>
+                          <img src="https://cdn-icons-png.flaticon.com/512/2535/2535554.png" alt="Mapa" width="20" style="vertical-align: middle;"/>
+                          <strong>Tabela csv</strong> – Canto superior direito. Apresenta tabela com o conteúdo do csv, após Upload.
+                        </li>                        
+                        <li>
                           <img src="https://cdn-icons-png.flaticon.com/512/535/535239.png" alt="Clique" width="20" style="vertical-align: middle;"/>
                           Ao clicar em um local sem ícones, coordenadas são apresentadas.
                         </li>
@@ -132,7 +142,7 @@
                         </li>
                         <li>
                           <img src="https://cdn-icons-png.flaticon.com/512/2311/2311340.png" alt="Ícones ativos" width="20" style="vertical-align: middle;"/>
-                          Os demais ícones representam os ativos.
+                          Os demais ícones representam os ativos ou áreas.
                         </li>
                         <li>
                           <img src="https://cdn-icons-png.flaticon.com/512/15724/15724751.png" alt="Polígonos" width="20" style="vertical-align: middle;"/>
@@ -149,26 +159,26 @@
    
 
                         </ul>  
+                     <li>O zoom máximo e mínimo dependem dos fornecedores dos mapas.</li>                        
                      <li>Ao clicar sobre um ícone, são apresentadas informações pertinentes.</li>
                     </ul>
               <h2 id="can">Câmeras de Segurança</h2>
                 <ul>
+   
                   <li>
                       <img src="https://cdn-icons-png.flaticon.com/512/10682/10682215.png" alt="Fixa" width="20" style="vertical-align: middle;"/>
-                       <img src="https://cdn-icons-png.flaticon.com/512/9716/9716309.png" alt="Dome" width="20" style="vertical-align: middle;"/>
-          
-                  </li>
-                  <li>Câmeras são fixas, podendo ter zoom, ou móveis, devendo ser PTZ.</li>
-                  <li>As fixas devem ter azimute informado.</li>
-                  <li>Não tendo sido informado azimute, subentendemos ser dome.</li>
-                  <li>Para as câmeras fixas, são apresentados triângulos orientados, segundo o azimute informado na API Recintos.</li>
+                    Câmeras são fixas. Devem ter azimute informado, caso contrário, entendemos ser dome, ou móveis. 
+                    Para as câmeras fixas, são apresentados triângulos orientados, segundo o azimute informado na API Recintos.
+                  <li>
+                    <img src="https://cdn-icons-png.flaticon.com/512/9716/9716309.png" alt="Dome" width="20" style="vertical-align: middle;"/>
+                    Câmeras móveis. Devem ter PTZ.</li>
                   
                 </ul>                
               <h2 id="api">API Recintos</h2>
               <p>É preciso ter cuidado quando do envio de ocorrências à API Recintos.</p>
               <ul>              
-                <li>Ativos informados na mesma coordenada aparecem nos círculos numerados. O número contêm a quantidade de ativos na coordenada.</li>
-                <li>É preciso ter cuidado no envio de ocorrências à API Recintos. A informação I - Inclusão deve ser utilizada apenas para novas ocorrências.</li>
+                <li>Ativos informados na mesma coordenada são apresentados em círculos numerados. O número contêm a quantidade de ativos na coordenada.</li>
+                <li>A informação I - Inclusão deve ser utilizada apenas para novas ocorrências.</li>
                 <li>Orientamos não excluir um ativo, a não ser que haja certeza de não ter sido referenciado em alguma ocorrência qualquer. Retifique para georreferenciamento ativo = falso.</li> 
               </ul>
               <h2 id="obs">Observações</h2>
