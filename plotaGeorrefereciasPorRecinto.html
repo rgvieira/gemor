@@ -291,6 +291,7 @@
             attribution: "Tiles © Esri & the GIS community"
           })
         };
+
         // Ícones ideais para cada mapa
         const baseMapIcons = {
           "OpenStreetMap": "🗺️",       // mapa genérico
@@ -298,7 +299,8 @@
           "Carto Dark": "🌙",           // estilo escuro
           "Esri World": "🌍",           // mapa de ruas/mundo
           "Esri Satellite": "🛰️"       // satélite
-        };      
+        };  
+
       //Mapa
        let map;
 
@@ -597,18 +599,27 @@
     
           
           map.addControl(new MapSelector());
-
+          // Função global para trocar mapa base
+          window.setBaseMap = function (nome) {
+            map.eachLayer(layer => {
+              if (layer instanceof L.TileLayer) {
+                map.removeLayer(layer);
+              }
+            });
+            baseMaps[nome].addTo(map);
+          };
   
-      // Grupo de clusters
-      markersCluster = L.markerClusterGroup({
-                             spiderfyOnEveryZoom: false, // não fechar ao dar zoom
-                             removeOutsideVisibleBounds: false, // mantém clusters fora da área visível
-                             disableClusteringAtZoom: null, // mantém agrupamento
-                             maxClusterRadius: function (zoom) {
-                                              return zoom < 10 ? precisaoAgrupamentoMaximo: precisaoAgrupamentoMinimo;
-                                                               }
-                                  });
-
+          // Grupo de clusters
+          markersCluster = L.markerClusterGroup({
+                                spiderfyOnEveryZoom: false, // não fechar ao dar zoom
+                                removeOutsideVisibleBounds: false, // mantém clusters fora da área visível
+                                disableClusteringAtZoom: null, // mantém agrupamento
+                                maxClusterRadius: function (zoom) {
+                                                  return zoom < 10 ? precisaoAgrupamentoMaximo: precisaoAgrupamentoMinimo;
+                                                                  }
+                                      });
+          // ✅ Aqui você registra o evento
+          map.on("click", onMapClick);
 
       }
    
