@@ -78,6 +78,31 @@
     .map-footer-item img {
       height: 20px;
     }
+ /* Painel lateral */
+    .painel-tabela {
+      position: absolute;
+      top: 50px;
+      right: 10px;
+      width: 60%;       /* largura do painel */
+      height: 70%;      /* altura do painel */
+      background: white;
+      border: 2px solid #0D47A1;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      overflow: auto;
+      display: none;    /* começa escondido */
+      z-index: 1000;
+      padding: 10px;
+    }
+
+    /* Botão fechar dentro do painel */
+    .painel-tabela .fechar {
+      float: right;
+      cursor: pointer;
+      font-weight: bold;
+      color: darkred;
+      margin-bottom: 10px;
+    }    
     .polygon-label {
       font-weight: bold;
       font-size: 10px;
@@ -190,7 +215,11 @@
 
   <div id="map"></div>
   <div id="map-title"></div>
-  
+  <div id="painelTabela" class="painel-tabela">
+    <span class="fechar" onclick="document.getElementById('painelTabela').style.display='none'">X</span>
+    <!-- tabela será injetada aqui -->
+  </div>
+
   <!-- Ícone do Flaticon no canto direito -->
     <a href="https://www.flaticon.com/br/" 
       title="Flaticon" target="_blank">
@@ -279,7 +308,116 @@
     
       initMapa();
       plotarPontosMapa(pontos);
+  // Função para gerar HTML da tabela
+    function gerarTabelaHTML(tabela) {
+      if (!tabela || tabela.length === 0 || tabela[0].Tipo === '') {
+        return "";
+      }
+      let html = `
+        <table id="tabelaPonto">
+          <thead>
+            <tr>
+              <th>Tipo</th>
+              <th>Equipamento</th>
+              <th>Ativo</th>
+              <th>Protocolo</th>
+              <th>Azimute</th>
+              <th>Latitude</th>
+              <th>Longitude</th>
+              <th>Plotar</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+      tabela.forEach((p) => {
+        html += `
+          <tr>
+            <td>${p.Tipo}</td>
+            <td>${p.Equipamento}</td>
+            <td>${p.Ativo}</td>
+            <td>${p.Protocolo}</td>
+            <td>${p.Azimute}</td>
+            <td>${p.Latitude}</td>
+            <td>${p.Longitude}</td>
+            <td>
+              <button onclick="plotarNoMapa(${p.Latitude}, ${p.Longitude})"
+                      style="
+                        background: linear-gradient(180deg, #2196F3, #1565C0);
+                        border: 1px solid #0D47A1;
+                        border-radius: 6px;
+                        color: white;
+                        padding: 5px 10px;
+                        cursor: pointer;
+                        box-shadow: 0 4px #0D47A1;
+                        transition: all 0.2s ease;
+                      "
+                      onmousedown="this.style.boxShadow='0 2px #0D47A1'; this.style.transform='translateY(2px)';"
+                      onmouseup="this.style.boxShadow='0 4px #0D47A1'; this.style.transform='translateY(0)';">
+                📍
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+      html += `</tbody></table>`;
+      return html;
+    }
 
+    // Função para plotar marcador no mapa
+    function plotarNoMapa(lat, lng) {
+      L.marker([lat, lng])
+        .addTo(map)
+        .bindPopup(`<div style="color:darkred;"><strong>Marcador em:</strong><br>Lat: ${lat}<br>Lng: ${lng}</div>`)
+        .openPopup();
+      map.setView([lat, lng], 15);
+    }
+
+    // Controle Leaflet para abrir/fechar painel
+    L.Control.Excel = L.Control.extend({
+      onAdd: function(map) {
+        const btn = L.DomUtil.create('button', 'leaflet-bar leaflet-control leaflet-control-custom');
+        btn.innerHTML = `
+          <img src="https://cdn-icons-png.flaticon.com/512/2535/2535554.png" 
+              alt="Coordenadas" style="width:23px;height:20px;">
+        `;
+        btn.title = "Apresenta/oculta tabela de Coordenadas";
+        L.DomEvent.disableClickPropagation(btn);
+
+        btn.onclick = function() {
+          const painel = document.getElementById("painelTabela");
+          if (painel.style.display === "none" || painel.style.display === "") {
+            const html = gerarTabelaHTML(pontos);
+            if (html === "") return;
+            painel.innerHTML = '<span class="fechar" onclick="document.getElementById(\'painelTabela\').style.display=\'none\'">X</span>' + html;
+            painel.style.display = "block";
+
+            // Inicializa DataTable
+            setTimeout(() => {
+              const tabela = document.querySelector("#tabelaPonto");
+              if (tabela) {
+                new DataTable(tabela, {
+                  searchable: true,
+                  sortable: true,
+                  perPage: 15,
+                  labels: {
+                    placeholder: "Buscar...",
+                    perPage: "{select} registros por página",
+                    noRows: "Nenhum registro encontrado",
+                    info: "Mostrando {start} até {end} de {rows} registros"
+                  }
+                });
+              }
+            }, 200);
+          } else {
+            painel.style.display = "none";
+          }
+        };
+        return btn;
+      },
+      onRemove: function(map) {}
+    });
+
+    map.addControl(new L.Control.Excel({ position: "topright" }));
       //Função inicializar mapa
       function initMapa() {
         if(isTracing) console.log('InitMapa');
@@ -460,64 +598,7 @@
           
           map.addControl(new MapSelector());
 
-          // Função global para trocar mapa base
-          L.Control.Excel = L.Control.extend({
-          onAdd: function(map) {
-            const btn = L.DomUtil.create('button', 'leaflet-bar leaflet-control leaflet-control-custom');
-            // Ícone com tamanho definido diretamente no HTML
-
-
-              btn.innerHTML = `
-                <img src="https://cdn-icons-png.flaticon.com/512/2535/2535554.png" 
-                    alt="Coordenadas" style="width:23px;height:20px;">
-              `;            
-            btn.title = "Apresenta/oculta tabela de Coordenadas";
-
-            L.DomEvent.disableClickPropagation(btn);
-
-            btn.onclick = function() {
-              if (!popupAberto) {
-                const html = gerarTabelaHTML(pontos);
-                 if (html === "") return; // não abre se não há dados
-                  popupRef = L.popup({
-                      maxWidth: 500,   // largura máxima maior
-                      maxHeight: 900    // altura máxima maior
-                    })
-                  .setLatLng(map.getCenter())
-                  .setContent(html)
-                  .openOn(map);
-                popupAberto = true;
-
-                // Inicializa DataTable em português
-                setTimeout(() => {
-                  const tabela = document.querySelector("#tabelaPonto");
-                  if (tabela) {
-                    new DataTable(tabela, {
-                      searchable: true,
-                      sortable: true,
-                      perPage: 15,
-                      labels: {
-                        placeholder: "Buscar...",
-                        perPage: "{select} registros por página",
-                        noRows: "Nenhum registro encontrado",
-                        info: "Mostrando {start} até {end} de {rows} registros"
-                      }
-                    });
-                  }
-                }, 200);
-              } else {
-                map.closePopup(popupRef);
-                popupAberto = false;
-              }
-            };
-            return btn;
-          },
-          onRemove: function(map) {}
-        });
-
-        L.control.excel = function(opts) { return new L.Control.Excel(opts); }
-        L.control.excel({ position: 'topright' }).addTo(map);
-
+  
       // Grupo de clusters
       markersCluster = L.markerClusterGroup({
                              spiderfyOnEveryZoom: false, // não fechar ao dar zoom
@@ -530,62 +611,7 @@
 
 
       }
-      // Função para gerar HTML da tabela
-      function gerarTabelaHTML(tabela) {
-          if (!tabela || tabela.length === 0 || tabela[0].Tipo === '') {
-            return "";
-          }
-          let html = `
-            <div class="popup-table">
-            <table id="tabelaPonto">
-              <thead>
-                <tr>
-                  <th>Tipo</th>
-                  <th>Equipamento</th>
-                  <th>Ativo</th>
-                  <th>Protocolo</th>
-                  <th>Azimute</th>
-                  <th>Latitude</th>
-                  <th>Longitude</th>
-                  <th>Plotar</th> <!-- nova coluna -->
-                </tr>
-              </thead>
-              <tbody>
-          `;
-          tabela.forEach((p, idx) => {
-            html += `
-              <tr>
-                <td>${p.Tipo}</td>
-                <td>${p.Equipamento}</td>
-                <td>${p.Ativo}</td>
-                <td>${p.Protocolo}</td>
-                <td>${p.Azimute}</td>
-                <td>${p.Latitude}</td>
-                <td>${p.Longitude}</td>
-                 <td>
-                  <button onclick="plotarNoMapa(${p.Latitude}, ${p.Longitude})" 
-                          style="
-                            background: linear-gradient(180deg, #2196F3, #1565C0);
-                            border: 1px solid #0D47A1;
-                            border-radius: 6px;
-                            color: white;
-                            padding: 5px 10px;
-                            cursor: pointer;
-                            box-shadow: 0 4px #0D47A1;
-                            transition: all 0.2s ease;
-                          "
-                          onmousedown="this.style.boxShadow='0 2px #0D47A1'; this.style.transform='translateY(2px)';"
-                          onmouseup="this.style.boxShadow='0 4px #0D47A1'; this.style.transform='translateY(0)';">
-                    📍 
-                  </button>
-
-                </td>
-              </tr>
-            `;
-          });
-          html += `</tbody></table></div>`;
-          return html;
-        }
+   
         
         function plotarNoMapa(lat, lng) {
             if (!lat || !lng) {
