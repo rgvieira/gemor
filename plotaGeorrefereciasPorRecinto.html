@@ -532,42 +532,81 @@
       }
       // Função para gerar HTML da tabela
       function gerarTabelaHTML(tabela) {
-       
-            if (!tabela || tabela.length === 0 || tabela[0].Tipo === '') {
-                return "";
-            }
-            let html = `
-              <div class="popup-table">
-              <table id="tabelaPonto">
-                <thead>
-                  <tr>
-                    <th>Tipo</th>
-                    <th>Equipamento</th>
-                    <th>Ativo</th>
-                    <th>Protocolo</th>
-                    <th>Azimute</th>
-                    <th>Latitude</th>
-                    <th>Longitude</th>
-                  </tr>
-                </thead>
-                <tbody>
-            `;
-            tabela.forEach(p => {
-              html += `
+          if (!tabela || tabela.length === 0 || tabela[0].Tipo === '') {
+            return "";
+          }
+          let html = `
+            <div class="popup-table">
+            <table id="tabelaPonto">
+              <thead>
                 <tr>
-                  <td>${p.Tipo}</td>
-                  <td>${p.Equipamento}</td>
-                  <td>${p.Ativo}</td>
-                  <td>${p.Protocolo}</td>
-                  <td>${p.Azimute}</td>
-                  <td>${p.Latitude}</td>
-                  <td>${p.Longitude}</td>
+                  <th>Tipo</th>
+                  <th>Equipamento</th>
+                  <th>Ativo</th>
+                  <th>Protocolo</th>
+                  <th>Azimute</th>
+                  <th>Latitude</th>
+                  <th>Longitude</th>
+                  <th>Plotar</th> <!-- nova coluna -->
                 </tr>
-              `;
-            });
-            html += `</tbody></table></div>`;
-            return html;
+              </thead>
+              <tbody>
+          `;
+          tabela.forEach((p, idx) => {
+            html += `
+              <tr>
+                <td>${p.Tipo}</td>
+                <td>${p.Equipamento}</td>
+                <td>${p.Ativo}</td>
+                <td>${p.Protocolo}</td>
+                <td>${p.Azimute}</td>
+                <td>${p.Latitude}</td>
+                <td>${p.Longitude}</td>
+                 <td>
+                  <button onclick="plotarNoMapa(${p.Latitude}, ${p.Longitude})" 
+                          style="
+                            background: linear-gradient(180deg, #2196F3, #1565C0);
+                            border: 1px solid #0D47A1;
+                            border-radius: 6px;
+                            color: white;
+                            padding: 5px 10px;
+                            cursor: pointer;
+                            box-shadow: 0 4px #0D47A1;
+                            transition: all 0.2s ease;
+                          "
+                          onmousedown="this.style.boxShadow='0 2px #0D47A1'; this.style.transform='translateY(2px)';"
+                          onmouseup="this.style.boxShadow='0 4px #0D47A1'; this.style.transform='translateY(0)';">
+                    📍 
+                  </button>
+
+                </td>
+              </tr>
+            `;
+          });
+          html += `</tbody></table></div>`;
+          return html;
         }
+        
+        function plotarNoMapa(lat, lng) {
+            if (!lat || !lng) {
+              alert("Coordenadas inválidas!");
+              return;
+            }
+            L.marker([lat, lng])
+              .addTo(map)
+              .bindPopup(`
+                <div style="color:darkred;">
+                  <strong>Coordenada:</strong><br>
+                  Lat: ${lat}<br>
+                  Lng: ${lng}
+                </div>
+              `)
+              .openPopup();
+
+            // opcional: centralizar o mapa no ponto
+            map.setView([lat, lng], 15);
+        }
+
 
         // Função que converte CSV em JSON
         function csvParaJson(csvTexto) {
