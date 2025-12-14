@@ -480,8 +480,8 @@
                 const html = gerarTabelaHTML(pontos);
                  if (html === "") return; // não abre se não há dados
                   popupRef = L.popup({
-                      maxWidth: 900,   // largura máxima maior
-                      maxHeight: 1800    // altura máxima maior
+                      maxWidth: 500,   // largura máxima maior
+                      maxHeight: 900    // altura máxima maior
                     })
                   .setLatLng(map.getCenter())
                   .setContent(html)
