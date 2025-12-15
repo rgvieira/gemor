@@ -132,8 +132,56 @@
       border-collapse: collapse;
       font-size: 8px; /* 👈 solicitado */
       min-width: 900px;
+      table-layout: fixed;
     }
-
+.painel-tabela table th:nth-child(1),
+.painel-tabela table td:nth-child(1) {
+  width: 35px;       /* largura fixa Tipo*/
+  max-width: 35px;
+  text-align: center;
+}    
+.painel-tabela table th:nth-child(2),
+.painel-tabela table td:nth-child(2) {
+  width: 50px;       /* largura fixa Equipamento */
+  max-width: 50px;
+  text-align: center;
+}
+.painel-tabela table th:nth-child(3),
+.painel-tabela table td:nth-child(3) {
+  width: 2px;       /* largura fixa Ativo*/
+  max-width: 2px;
+  text-align: center;
+}
+.painel-tabela table th:nth-child(4),
+.painel-tabela table td:nth-child(4) {
+  width: 35px;       /* largura fixa Protocolo*/
+  max-width: 35px;
+  text-align: center;
+}    
+.painel-tabela table th:nth-child(5),
+.painel-tabela table td:nth-child(5) {
+  width: 2px;       /* largura fixa Azimute*/
+  max-width: 2px;
+  text-align: center;
+}  
+.painel-tabela table th:nth-child(6),
+.painel-tabela table td:nth-child(6) {
+  width: 8px;       /* largura fixa Latitude*/
+  max-width: 8px;
+  text-align: center;
+} 
+.painel-tabela table th:nth-child(7),
+.painel-tabela table td:nth-child(7) {
+  width: 9px;       /* largura fixa Longitude*/
+  max-width: 9px;
+  text-align: center;
+}
+.painel-tabela table th:nth-child(8),
+.painel-tabela table td:nth-child(8) {
+  width: 8px;       /* largura fixa Plotaar*/
+  max-width: 8px;
+  text-align: center;
+}
     .painel-tabela thead {
       background: #f1f1f1;   /* fundo cinza claro */
       color: black;          /* texto preto */
@@ -170,6 +218,7 @@
       cursor: pointer;
       font-size: 9px;
       box-shadow: 0 2px #0D47A1;
+      padding: 1px 4px;
     }
 
     .painel-tabela .btn-plotar:active {
@@ -422,13 +471,13 @@
             <tr>
               <th>Tipo</th>
               <th>Equipamento</th>
-              <th>Ativo</th>
-              <th>Protocolo</th>
-            
-              <th>Azimute</th>
-              <th>Latitude</th>
-              <th>Longitude</th>
-              <th>Plotar</th>  
+              <th style="width:10px;">Ativo</th>              
+              <th style="width:50px;">Protocolo</th>
+              <th style="width:50px;">Azimute</th>
+              <th style="width:50px;">Latitude</th>
+              <th style="width:50px;">Longitude</th>
+
+              <th style="width:50px;">Plotar</th> 
             </tr>
           </thead>
           <tbody>
