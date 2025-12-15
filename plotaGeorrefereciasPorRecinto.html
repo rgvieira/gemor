@@ -85,18 +85,19 @@
       position: absolute;
       top: 50px;
       right: 10px;
-      width: 60%;       /* largura do painel */
-      height: 70%;      /* altura do painel */
+      width: 60%;
+      height: 70%;
       background: white;
       border: 2px solid #0D47A1;
       border-radius: 8px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-      overflow: auto;
-      display: none;    /* começa escondido */
+      overflow-x: auto;   /* 👈 permite rolar para a esquerda/direita */
+      overflow-y: auto;   /* 👈 mantém rolagem vertical */
+      display: none;
       z-index: 1000;
       padding: 10px;
-      font-size: 8px; /* 👈 conforme pedido */
-      min-width: 900px; /* força scroll no mobile */      
+      font-size: 8px;
+      min-width: 900px;   /* força largura mínima */
     }
 
     /* Botão fechar dentro do painel */
@@ -134,54 +135,54 @@
       min-width: 900px;
       table-layout: fixed;
     }
-.painel-tabela table th:nth-child(1),
-.painel-tabela table td:nth-child(1) {
-  width: 35px;       /* largura fixa Tipo*/
-  max-width: 35px;
-  text-align: center;
-}    
-.painel-tabela table th:nth-child(2),
-.painel-tabela table td:nth-child(2) {
-  width: 50px;       /* largura fixa Equipamento */
-  max-width: 50px;
-  text-align: center;
-}
-.painel-tabela table th:nth-child(3),
-.painel-tabela table td:nth-child(3) {
-  width: 2px;       /* largura fixa Ativo*/
-  max-width: 2px;
-  text-align: center;
-}
-.painel-tabela table th:nth-child(4),
-.painel-tabela table td:nth-child(4) {
-  width: 35px;       /* largura fixa Protocolo*/
-  max-width: 35px;
-  text-align: center;
-}    
-.painel-tabela table th:nth-child(5),
-.painel-tabela table td:nth-child(5) {
-  width: 2px;       /* largura fixa Azimute*/
-  max-width: 2px;
-  text-align: center;
-}  
-.painel-tabela table th:nth-child(6),
-.painel-tabela table td:nth-child(6) {
-  width: 8px;       /* largura fixa Latitude*/
-  max-width: 8px;
-  text-align: center;
-} 
-.painel-tabela table th:nth-child(7),
-.painel-tabela table td:nth-child(7) {
-  width: 9px;       /* largura fixa Longitude*/
-  max-width: 9px;
-  text-align: center;
-}
-.painel-tabela table th:nth-child(8),
-.painel-tabela table td:nth-child(8) {
-  width: 8px;       /* largura fixa Plotaar*/
-  max-width: 8px;
-  text-align: center;
-}
+    .painel-tabela table th:nth-child(1),
+    .painel-tabela table td:nth-child(1) {
+      width: 35px;       /* largura fixa Tipo*/
+      max-width: 35px;
+      text-align: center;
+    }    
+    .painel-tabela table th:nth-child(2),
+    .painel-tabela table td:nth-child(2) {
+      width: 50px;       /* largura fixa Equipamento */
+      max-width: 50px;
+      text-align: center;
+    }
+    .painel-tabela table th:nth-child(3),
+    .painel-tabela table td:nth-child(3) {
+      width: 2px;       /* largura fixa Ativo*/
+      max-width: 2px;
+      text-align: center;
+    }
+    .painel-tabela table th:nth-child(4),
+    .painel-tabela table td:nth-child(4) {
+      width: 35px;       /* largura fixa Protocolo*/
+      max-width: 35px;
+      text-align: center;
+    }    
+    .painel-tabela table th:nth-child(5),
+    .painel-tabela table td:nth-child(5) {
+      width: 2px;       /* largura fixa Azimute*/
+      max-width: 2px;
+      text-align: center;
+    }  
+    .painel-tabela table th:nth-child(6),
+    .painel-tabela table td:nth-child(6) {
+      width: 8px;       /* largura fixa Latitude*/
+      max-width: 8px;
+      text-align: center;
+    } 
+    .painel-tabela table th:nth-child(7),
+    .painel-tabela table td:nth-child(7) {
+      width: 9px;       /* largura fixa Longitude*/
+      max-width: 9px;
+      text-align: center;
+    }
+    .painel-tabela table th:nth-child(8),
+    .painel-tabela table td:nth-child(8) {
+      width: 8px;       /* largura fixa Plotaar*/
+      max-width: 8px;
+      text-align: center;
+    }
     .painel-tabela thead {
       background: #f1f1f1;   /* fundo cinza claro */
       color: black;          /* texto preto */
@@ -233,7 +234,12 @@
       body {
         padding: 4px;
       }
-
+      .painel-tabela {
+        width: 95%;        /* ocupa quase toda a tela */
+        min-width: auto;   /* 👈 remove largura mínima */
+        left: 2%;          /* centraliza melhor */
+        right: auto;
+      }
       .painel-tabela h2 {
         font-size: 12px;
       }
