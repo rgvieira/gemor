@@ -121,6 +121,7 @@
     =============================== */
     .painel-tabela .table-wrapper {
       overflow-x: auto;
+      overflow-x: auto;   /* 👈 permite rolar horizontalmente */
       max-height: 70vh;
       border: 1px solid #ddd;
     }
@@ -131,9 +132,8 @@
     .painel-tabela table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 8px; /* 👈 solicitado */
-      min-width: 900px;
-      table-layout: fixed;
+      table-layout: auto;   /* ou fixed, mas com min-width */
+      min-width: 900px;     /* 👈 força largura maior que tela */
     }
     .painel-tabela table th:nth-child(1),
     .painel-tabela table td:nth-child(1) {
@@ -239,6 +239,9 @@
         min-width: auto;   /* 👈 remove largura mínima */
         left: 2%;          /* centraliza melhor */
         right: auto;
+      }
+      .painel-tabela .table-wrapper {
+         overflow-x: auto;   /* garante scroll horizontal */
       }
       .painel-tabela h2 {
         font-size: 12px;
@@ -380,7 +383,9 @@
 
   <div id="painelTabela" class="painel-tabela" style="display:none;">
     <span class="fechar" onclick="document.getElementById('painelTabela').style.display='none'">X</span>
-    <div class="conteudo"></div>
+    <div class="table-wrapper">
+      <!-- tabela será injetada aqui -->
+    </div>
   </div>
 
 
@@ -556,6 +561,7 @@
       map.setView([lat, lng], 15);
         // ✅ Fecha o painel lateral
       const painel = document.getElementById("painelTabela");
+
       if (painel) {
         painel.style.display = "none";
       }
@@ -574,10 +580,14 @@
 
     btn.onclick = function() {
       const painel = document.getElementById("painelTabela");
+      const wrapper = painel.querySelector(".table-wrapper");
       if (painel.style.display === "none" || painel.style.display === "") {
         const htmlTabela = gerarTabelaHTML(pontos);
         if (htmlTabela === "") return;
-        painel.querySelector(".conteudo").innerHTML = htmlTabela; // só atualiza a parte da tabela
+        if (wrapper) {
+           wrapper.innerHTML = htmlTabela;
+        }
+        //painel.querySelector(".conteudo").innerHTML = htmlTabela; // só atualiza a parte da tabela
         painel.style.display = "block";
 
         // Inicializa DataTable
@@ -601,10 +611,13 @@
         painel.style.display = "none";
       }
     };
+    
     return btn;
         },
         onRemove: function(map) {}
-    });
+    }
+  
+  );
 
     map.addControl(new L.Control.Excel({ position: "topright" }));
       //Função inicializar mapa
