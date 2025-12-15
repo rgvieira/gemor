@@ -130,7 +130,7 @@
                         </li>
                         <li>
                           <img src="https://cdn-icons-png.flaticon.com/512/2535/2535554.png" alt="Mapa" width="20" style="vertical-align: middle;"/>
-                          <strong>Tabela csv</strong> – Canto superior direito. Apresenta tabela com o conteúdo do csv, após Upload.
+                          <strong>Tabela csv</strong> – Canto superior direito. Apresenta tabela com o conteúdo do csv, após Upload. Disponível botão para plotar a coordenada escolhida.
                         </li>                        
                         <li>
                           <img src="https://cdn-icons-png.flaticon.com/512/535/535239.png" alt="Clique" width="20" style="vertical-align: middle;"/>
@@ -179,7 +179,7 @@
    
                   <li>
                       <img src="https://cdn-icons-png.flaticon.com/512/10682/10682215.png" alt="Fixa" width="20" style="vertical-align: middle;"/>
-                    Câmeras são fixas. Devem ter azimute informado, caso contrário, entendemos ser dome, ou móveis. 
+                    Câmeras são fixas. Devem ter azimute informado, caso contrário, são consideradas dome, ou móveis. 
                     Para as câmeras fixas, são apresentados triângulos orientados, segundo o azimute informado via API Recintos.
                   <li>
                     <img src="https://cdn-icons-png.flaticon.com/512/9716/9716309.png" alt="Dome" width="20" style="vertical-align: middle;"/>
@@ -187,10 +187,10 @@
                   
                 </ul>                
               <h2 id="api">API Recintos</h2>
-              <p>É preciso ter cuidado quando do envio de ocorrências via API Recintos.</p>
+              <p>Cuidado no envio de ocorrências via API Recintos.</p>
               <ul>              
-                <li>Ativos informados na mesma coordenada são apresentados em círculos numerados. O número contêm a quantidade de ativos na coordenada.</li>
-                <li>A informação I - Inclusão deve ser utilizada apenas para novas ocorrências.</li>
+                <li>Ativos informados na mesma coordenada são plotados no mapa como círculos numerados. O número contêm a quantidade de ativos na coordenada.</li>
+                <li>A informação I - Inclusão, <a href="https://docs.portalunico.siscomex.gov.br/api/rcnt/" target="_blank"> API Recintos</a>, deve ser utilizada apenas para novas ocorrências.</li>
                 <li>Orientamos não excluir um ativo, a não ser que haja certeza de não ter sido referenciado em alguma ocorrência qualquer. Retifique para georreferenciamento ativo = falso.</li> 
               </ul>
               <h2 id="obs">Observações</h2>

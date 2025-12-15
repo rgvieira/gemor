@@ -95,6 +95,8 @@
       display: none;    /* começa escondido */
       z-index: 1000;
       padding: 10px;
+      font-size: 8px; /* 👈 conforme pedido */
+      min-width: 900px; /* força scroll no mobile */      
     }
 
     /* Botão fechar dentro do painel */
@@ -104,7 +106,100 @@
       font-weight: bold;
       color: darkred;
       margin-bottom: 10px;
-    }    
+    }   
+    /* painel tabela */
+
+    .painel-tabela h2 {
+      margin: 0 0 8px 0;
+      font-size: 13px;
+      color: #0D47A1;
+    }
+
+    /* ===============================
+       WRAPPER (SCROLL)
+    =============================== */
+    .painel-tabela .table-wrapper {
+      overflow-x: auto;
+      max-height: 70vh;
+      border: 1px solid #ddd;
+    }
+
+    /* ===============================
+       TABELA
+    =============================== */
+    .painel-tabela table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 8px; /* 👈 solicitado */
+      min-width: 900px;
+    }
+
+    .painel-tabela thead {
+      background: #f1f1f1;   /* fundo cinza claro */
+      color: black;          /* texto preto */
+      font-weight: bold;     /* negrito */
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+    .painel-tabela th,
+    .painel-tabela td {
+      padding: 3px 5px;
+      border: 1px solid #ddd;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .painel-tabela tbody tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+
+    .painel-tabela tbody tr:hover {
+      background: #e3f2fd;
+    }
+
+    /* ===============================
+       BOTÃO PLOTAR
+    =============================== */
+    .painel-tabela .btn-plotar {
+      background: linear-gradient(180deg, #2196F3, #1565C0);
+      border: 1px solid #0D47A1;
+      border-radius: 4px;
+      color: white;
+      padding: 2px 6px;
+      cursor: pointer;
+      font-size: 9px;
+      box-shadow: 0 2px #0D47A1;
+    }
+
+    .painel-tabela .btn-plotar:active {
+      box-shadow: 0 1px #0D47A1;
+      transform: translateY(1px);
+    }
+
+    /* ===============================
+       MOBILE
+    =============================== */
+    @media (max-width: 768px) {
+      body {
+        padding: 4px;
+      }
+
+      .painel-tabela h2 {
+        font-size: 12px;
+      }
+
+      .painel-tabela table {
+        font-size: 8px;
+      }
+
+      .painel-tabela .btn-plotar {
+        font-size: 10px;
+        padding: 2px 4px;
+      }
+    }
+
+    /* // */
     .polygon-label {
       font-weight: bold;
       font-size: 10px;
@@ -269,7 +364,7 @@
         { coords: [], titulo: "Portêiner Shiploader ou similares", cor: 'black' }          
                          ];   
 
-      // Estado da função
+      // Estado da função de inibir apresentação de coordenadas no mapa
       let clickEnabled = false;
       isTracing = false; //Mostra dados na console
       // Grupo de clusters
@@ -329,10 +424,11 @@
               <th>Equipamento</th>
               <th>Ativo</th>
               <th>Protocolo</th>
+            
               <th>Azimute</th>
               <th>Latitude</th>
               <th>Longitude</th>
-              <th>Plotar</th>
+              <th>Plotar</th>  
             </tr>
           </thead>
           <tbody>
@@ -344,26 +440,36 @@
             <td>${p.Equipamento}</td>
             <td>${p.Ativo}</td>
             <td>${p.Protocolo}</td>
+           
             <td>${p.Azimute}</td>
             <td>${p.Latitude}</td>
             <td>${p.Longitude}</td>
             <td>
-              <button onclick="plotarNoMapa(${p.Latitude}, ${p.Longitude})"
-                      style="
-                        background: linear-gradient(180deg, #2196F3, #1565C0);
-                        border: 1px solid #0D47A1;
-                        border-radius: 6px;
-                        color: white;
-                        padding: 5px 10px;
-                        cursor: pointer;
-                        box-shadow: 0 4px #0D47A1;
-                        transition: all 0.2s ease;
-                      "
-                      onmousedown="this.style.boxShadow='0 2px #0D47A1'; this.style.transform='translateY(2px)';"
-                      onmouseup="this.style.boxShadow='0 4px #0D47A1'; this.style.transform='translateY(0)';">
-                📍
-              </button>
-            </td>
+              <button
+                        onclick="plotarNoMapa(
+                          ${p.Latitude},
+                          ${p.Longitude},
+                          '${p.Tipo}',
+                          '${p.Equipamento}',
+                          ${p.Azimute}
+                        )"
+                        style="
+                          background: linear-gradient(180deg, #2196F3, #1565C0);
+                          border: 1px solid #0D47A1;
+                          border-radius: 6px;
+                          color: white;
+                          padding: 5px 10px;
+                          cursor: pointer;
+                          box-shadow: 0 4px #0D47A1;
+                          transition: all 0.2s ease;
+                        "
+                        onmousedown="this.style.boxShadow='0 2px #0D47A1'; this.style.transform='translateY(2px)'"
+                        onmouseup="this.style.boxShadow='0 4px #0D47A1'; this.style.transform='translateY(0)'"
+                      >
+                        📍
+                      </button>
+
+            </td> 
           </tr>
         `;
       });
@@ -371,18 +477,33 @@
       return html;
     }
 
-    // Função para plotar marcador no mapa
-    function plotarNoMapa(lat, lng) {
-      L.marker([lat, lng])
-        .addTo(map)
-        .bindPopup(`<div style="color:darkred;"><strong>Marcador em:</strong><br>Lat: ${lat}<br>Lng: ${lng}</div>`)
-        .openPopup();
-          map.setView([lat, lng], 15);
-            // ✅ Fecha o painel lateral após plotar
-        const painel = document.getElementById("painelTabela");
-        if (painel) {
-          painel.style.display = "none";
-        }
+
+    // Função para plotar marcador no mapa com mais informações
+    function plotarNoMapa(lat, lng, tipo, equipamento, azimute) {
+      L.circleMarker([lat, lng], {
+        radius: 8,
+        color: '#b71c1c',
+        fillColor: '#e53935',
+        fillOpacity: 0.9
+      })
+      .addTo(map)
+      .bindPopup(`
+        <strong style="color: darkblue;">${tipo}</strong>
+        <ul style="padding-left: 15px; margin: 0;">
+          <li>${equipamento}</li>
+          <li>Latitude: ${lat}</li>
+          <li>Longitude: ${lng}</li>
+          ${azimute ? `<li>Azimute: ${azimute}</li>` : ""}
+        </ul>
+      `)
+      .openPopup();
+
+      map.setView([lat, lng], 15);
+        // ✅ Fecha o painel lateral
+      const painel = document.getElementById("painelTabela");
+      if (painel) {
+        painel.style.display = "none";
+      }
     }
 
     // Controle Leaflet para abrir/fechar painel
@@ -432,6 +553,7 @@
 
     map.addControl(new L.Control.Excel({ position: "topright" }));
       //Função inicializar mapa
+
       function initMapa() {
         if(isTracing) console.log('InitMapa');
           // Inicializa o mapa com OpenStreetMap
@@ -462,6 +584,9 @@
    
           // Função de clique no mapa
           function onMapClick(e) {
+
+            if (!clickEnabled) return;
+
             const lat = e.latlng.lat;
             const lng = e.latlng.lng;
 
@@ -644,15 +769,24 @@
 
       }
    
-              
-      function plotarNoMapa(lat, lng) {
+   /*           
+      function plotarNoMapa(lat, lng,tipo,equipamento,aziumte) {
         L.marker([lat, lng])
           .addTo(map)
-          .bindPopup(`<div style="color:darkred;">
-                        <strong>Marcador em:</strong><br>
-                        Lat: ${lat}<br>
-                        Lng: ${lng}
-                      </div>`)
+          .bindPopup(
+          `
+                        <strong style="color: darkbleu;">${p.Tipo}</strong>
+                          <ul style="padding-left: 15px; margin: 0;">
+                            <li>${p.Equipamento}</li>
+                            <li>Latitude: ${parseFloat(getCoordenada(getPrimeiraOcorrencia(p.Latitude)))}</li>
+                            <li>Longitude: ${parseFloat(getCoordenada(getPrimeiraOcorrencia(p.Longitude)))}</li>
+
+                            ${p.Azimute ? `<li>Azimute: ${p.Azimute}</li>` : ""}
+                          </ul>
+                      
+                      `  
+                                 
+                    )
           .openPopup();
 
         map.setView([lat, lng], 15);
@@ -663,7 +797,7 @@
           painel.style.display = "none";
         }
       }
-
+*/
 
         // Função que converte CSV em JSON
         function csvParaJson(csvTexto) {
@@ -681,6 +815,7 @@
             return objeto;
           });
         }
+
         function lerCSV(arquivo) {
           if(isTracing) console.log('lerCSV')       
           return new Promise((resolve, reject) => {
