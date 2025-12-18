@@ -10,7 +10,8 @@
     <!-- Leaflet CSS 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
     -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vanilla-datatables@latest/dist/vanilla-dataTables.min.css">    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vanilla-datatables@latest/dist/vanilla-dataTables.min.css">   
+     
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <!-- MarkerCluster CSS -->
@@ -92,25 +93,27 @@
   }
 
   /* ===============================
-    PAINEL LATERAL
+    PAINEL LATERAL  height: 900px,
   =============================== */
-  .painel-tabela {
-    position: absolute;
-    top: 50px;
-    right: 10px;
-    width: 60%;
-    height: 70%;
-    background: #fff;
-    border: 2px solid var(--azul-escuro);
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    overflow: auto;
-    display: none;
-    z-index: 1000;
-    padding: 10px;
-    font-size: 0.5rem;
-    min-width: 900px;
-  }
+ .painel-tabela {
+  position: absolute;
+  top: 50px;
+  right: 10px;
+  width: 60%;
+  height: 700px !important;
+
+
+  background: #fff;
+  border: 2px solid var(--azul-escuro);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  overflow: auto; /* mantém rolagem vertical e horizontal */
+  display: none;
+  z-index: 1000;
+  padding: 10px;
+  font-size: 0.5rem;
+  min-width: 900px;
+}
   .painel-tabela .fechar {
     float: right;
     cursor: pointer;
@@ -124,8 +127,9 @@
     color: var(--azul-escuro);
   }
   .painel-tabela .table-wrapper {
-    overflow-x: auto;
-    max-height: 70vh;
+    overflow-x: auto; /* força rolagem horizontal */
+    overflow-y: auto; /* força rolagem vertical */
+    max-height: none; /* não limita altura */
     border: 1px solid #ddd;
   }
 
@@ -135,14 +139,17 @@
   .painel-tabela table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 900px;
+    table-layout: fixed; /* força caber na largura */
+    font-size: 0.65rem;  /* fonte menor */
   }
+
   .painel-tabela th,
   .painel-tabela td {
-    padding: 3px 5px;
+    padding: 2px 4px;
     border: 1px solid #ddd;
     text-align: center;
-    white-space: nowrap;
+    white-space: normal; /* permite quebra */
+    word-wrap: break-word;
   }
   .painel-tabela thead {
     background: var(--cinza-claro);
@@ -176,27 +183,38 @@
   .painel-tabela table td:nth-child(7) { width: 90px; }
   .painel-tabela table th:nth-child(8),
   .painel-tabela table td:nth-child(8) { width: 80px; }
+  /* 📱 Mobile */
+  @media (max-width: 768px) {
+    .painel-tabela {
+      top: 0;
+      right: 0;
+      width: 100%;
+      height: 100vh; /* ocupa toda a tela */
+      min-width: unset; /* remove largura mínima */
+      font-size: 0.7rem;
+      border-radius: 0; /* painel colado nas bordas */
+    }
 
+    .painel-tabela table {
+      min-width: 600px; /* força scroll horizontal */
+      font-size: 0.65rem;
+    }
+
+    .painel-tabela th,
+    .painel-tabela td {
+      padding: 2px 4px;
+      font-size: 0.65rem;
+    }
+
+    .dataTable-pagination .dataTable-pagination-button {
+      font-size: 0.55rem;
+      padding: 1px 4px;
+    }
+  }
   /* ===============================
     BOTÕES
   =============================== */
-  /*
-  .painel-tabela .btn-plotar {
-    background: linear-gradient(180deg, var(--azul), #1565C0);
-    border: 1px solid var(--azul-escuro);
-    border-radius: 4px;
-    color: #fff;
-    padding: 2px 6px;
-    cursor: pointer;
-    font-size: 0.6rem;
-    box-shadow: 0 2px var(--azul-escuro);
-  }
-  .painel-tabela .btn-plotar:active {
-    box-shadow: 0 1px var(--azul-escuro);
-    transform: translateY(1px);
-  }
-  */
-  /* Botões de ação (Plotar e Editar) */
+
   .btn-acao,
   .btn-plotar,
   .btn-editar {
@@ -270,10 +288,10 @@
 
   /* Campo de busca em azul */
   .dataTable-input {
-    padding: 8px 12px;
-    border: 2px solid #2196f3; /* azul */
-    border-radius: 6px;
-    font-size: 14px;
+    padding: 2px 3px;
+    border: 1px solid #2196f3; /* azul */
+    border-radius: 4px;
+    font-size: 10px;
     outline: none;
     transition: all 0.3s ease;
   }
@@ -294,9 +312,10 @@
     background: #2196f3; /* azul */
     color: white;
     border: none;
-    padding: 6px 12px;
-    margin: 2px;
-    border-radius: 4px;
+  font-size: 0.65rem;
+  padding: 1px 4px;
+    margin: 1px;
+    border-radius: 2px;
     cursor: pointer;
     transition: background 0.3s ease;
   }
@@ -306,25 +325,10 @@
   }
 
   .dataTable-pagination .dataTable-pagination-button.active {
-    background: #0d47a1; /* azul bem escuro */
+    background: #0d47a1; /* azul ainda mais escuro */
+    font-weight: bold;
   }
-  /* ===============================
-    MOBILE
-  =============================== */
-  @media (max-width: 768px) {
-    .painel-tabela {
-      width: 95%;
-      min-width: auto;
-      left: 2%;
-      right: auto;
-    }
-    .painel-tabela h2 { font-size: 0.75rem; }
-    .painel-tabela table { font-size: 0.5rem; }
-    .painel-tabela .btn-plotar {
-      font-size: 0.65rem;
-      padding: 2px 4px;
-    }
-  }
+
 
   /* ===============================
     LABELS E POPUPS
@@ -430,21 +434,23 @@
   </div>
   <div id="map-title"></div>
 
-<div id="painelTabela" class="painel-tabela" style="display:none;
-     position:absolute; top:50px; right:10px; width:400px; height:300px;
-     background:#fff; border:1px solid #ccc; overflow:auto; z-index:9999;">
-  <button onclick="fecharPainel()" class="btn-acao btn-fechar" title="Fechar" style="float:right; margin:5px;">
-    <img src="https://cdn-icons-png.flaticon.com/128/4034/4034637.png" 
-         alt="Fechar" class="icon-fechar" style="width:20px;height:20px;">
-  </button>
-  <div class="table-wrapper"></div>
-</div>
+  <div id="painelTabela" class="painel-tabela" style="display:none;
+      position:absolute; top:50px; right:10px; width:400px; height:300px;
+      background:#fff; border:1px solid #ccc; overflow:auto; z-index:9999;">
+    <button onclick="fecharPainel()" class="btn-acao btn-fechar" title="Fechar" style="float:right; margin:5px;">
+      <img src="https://cdn-icons-png.flaticon.com/128/4034/4034637.png" 
+          alt="Fechar" class="icon-fechar" style="width:20px;height:20px;">
+    </button>
+    <div class="table-wrapper"></div>
+  </div>
 
 
   <!-- Leaflet JS 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
   -->
+
   <script src="https://cdn.jsdelivr.net/npm/vanilla-datatables@latest/dist/vanilla-dataTables.min.js"></script>
+
    
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <!-- MarkerCluster JS -->
@@ -453,7 +459,7 @@
     //Variáveis e constantes globais
     let idDataTable = null; // variável global
     let linhaReferencia = null; // guarda índice da última linha clicada
-    const linhaPerPage = '5;'
+
     const nivelZoom = 18;
 
     // Array para armazenar coordenadas das casas
@@ -523,91 +529,153 @@
     plotartabelaGeoMapa(tabelaGeo);
     
 
-
-        // Função para gerar tabela com coluna Editar
-        // Função para gerar tabela HTML editável e sincronizada com tabelaGeo
-      function gerarTabelaHTML(tabela) {
-        if (!tabela || tabela.length === 0 || tabela[0].Tipo === '') {
-          return "";
-        }
-
-        let html = `
-          <!-- Botões no topo -->
-          <div class="tabela-actions" style="margin-bottom:8px;">
-            <button onclick="criarLinha()" class="btn-acao btn-fechar">
-              <img src="https://cdn-icons-png.flaticon.com/512/1665/1665680.png" 
-                  alt="Nova linha" style="width:20px;height:20px;">
-            </button>            
-            <button onclick="baixarCSV()" class="btn-acao btn-fechar">
-              <img src="https://cdn-icons-png.flaticon.com/512/12809/12809885.png" 
-                  alt="Salvar csv" style="width:20px;height:20px;">
-            </button>
-            <button onclick="fecharPainel()" class="btn-acao btn-fechar">
-              <img src="https://cdn-icons-png.flaticon.com/128/4034/4034637.png" 
-                  alt="Fechar" class="icon-fechar">
-            </button> 
-          </div>
-
-          <table id="containerTabelaGeo">
-            <thead>
-              <tr>
-                <th>Tipo</th>
-                <th>Equipamento</th>
-                <th>Ativo</th>              
-                <th>Protocolo</th>
-                <th>Azimute</th>
-                <th>Latitude</th>
-                <th>Longitude</th>
-                <th>Plotar</th> 
-                <th>Editar</th>
-              </tr>
-            </thead>
-            <tbody>
-        `;
-
-        tabela.forEach((p, idx) => {
-          const azimute = p.Azimute ? p.Azimute : 0.;
-          html += `
-            <tr data-index="${idx}">
-              <td contenteditable="true" onblur="tabelaGeo[${idx}].Tipo=this.innerText">${p.Tipo}</td>
-              <td contenteditable="true" onblur="tabelaGeo[${idx}].Equipamento=this.innerText">${p.Equipamento}</td>
-              <td contenteditable="true" onblur="tabelaGeo[${idx}].Ativo=this.innerText">${p.Ativo}</td>
-              <td contenteditable="true" onblur="tabelaGeo[${idx}].Protocolo=this.innerText">${p.Protocolo}</td>
-              <td contenteditable="true" onblur="tabelaGeo[${idx}].Azimute=this.innerText">${p.Azimute}</td>
-              <td contenteditable="true" onblur="tabelaGeo[${idx}].Latitude=this.innerText">${p.Latitude}</td>
-              <td contenteditable="true" onblur="tabelaGeo[${idx}].Longitude=this.innerText">${p.Longitude}</td>
-              <td style="text-align:left;">
-                <button onclick="plotarNoMapa('${p.Latitude}', '${p.Longitude}', '${p.Tipo}', '${p.Equipamento}', ${azimute}, ${idx})" class="btn-acao btn-fechar">📍</button>
-              </td>
-              <td style="text-align:left;">
-                <button onclick="editarLinha(${idx})" class="btn-acao btn-fechar" title="Editar linha">✏️</button>
-              </td>
-            </tr>
-          `;
-        });
-
-        html += `</tbody></table>`;
-
-        // Botões no rodapé
-        html += `
-          <div class="tabela-actions" style="margin-top:8px;">
-            <button onclick="criarLinha()" class="btn-acao btn-fechar">
-              <img src="https://cdn-icons-png.flaticon.com/512/1665/1665680.png" 
-                  alt="Nova linha" style="width:20px;height:20px;">
-            </button>            
-            <button onclick="baixarCSV()" class="btn-acao btn-fechar">
-              <img src="https://cdn-icons-png.flaticon.com/512/12809/12809885.png" 
-                  alt="Salvar csv" style="width:20px;height:20px;">
-            </button>
-            <button onclick="fecharPainel()" class="btn-acao btn-fechar">
-              <img src="https://cdn-icons-png.flaticon.com/128/4034/4034637.png" 
-                  alt="Fechar" class="icon-fechar">
-            </button>           
-          </div>
-        `;
-
-        return html;
+    function gerarTabelaHTML(tabela) {
+      if (!tabela || tabela.length === 0 || tabela[0].Tipo === '') {
+        return "";
       }
+
+      // Utilitário para evitar quebra de HTML ao inserir strings
+      const esc = s => String(s || "").replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+
+      let html = `
+        <!-- Botões no topo -->
+        <div class="tabela-actions" style="margin-bottom:8px;">
+          <button onclick="criarLinha()" class="btn-acao btn-fechar">
+            <img src="https://cdn-icons-png.flaticon.com/512/1665/1665680.png" 
+                alt="Nova linha" style="width:12px;height:12px;">
+          </button>            
+          <button onclick="baixarCSV()" class="btn-acao btn-fechar">
+            <img src="https://cdn-icons-png.flaticon.com/512/12809/12809885.png" 
+                alt="Salvar csv" style="width:12px;height:12px;">
+          </button>
+          <button onclick="fecharPainel()" class="btn-acao btn-fechar">
+            <img src="https://cdn-icons-png.flaticon.com/128/4034/4034637.png" 
+                alt="Fechar" class="icon-fechar" style="width:12px;height:12px;">
+          </button> 
+        </div>
+
+        <table id="containerTabelaGeo">
+          <thead>
+            <tr>
+              <th>Tipo</th>
+              <th>Equipamento</th>
+              <th>Ativo</th>              
+              <th>Protocolo</th>
+              <th>Azimute</th>
+              <th>Latitude</th>
+              <th>Longitude</th>
+              <th>Plotar</th> 
+              <th>Editar</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      tabela.forEach((p, idx) => {
+        const azimute = p.Azimute ? p.Azimute : 0.;
+        const tipo = p.Tipo || "";
+        const protocoloCompleto = p.Protocolo || "";
+        const protocoloCurto = protocoloCompleto.slice(-6);
+
+        const latCompleta = p.Latitude || "";
+        const latCurta = latCompleta.slice(-10); // 10 caracteres
+
+        const lonCompleta = p.Longitude || "";
+        const lonCurta = lonCompleta.slice(-10); // 10 caracteres
+
+        // Equipamento: remover todas as ocorrências de Tipo (case-insensitive)
+        const equipamentoCompleto = p.Equipamento || "";
+        const eqCurtoCalc = (() => {
+          if (!tipo) return equipamentoCompleto;
+          const re = new RegExp(tipo.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'); // escape + case-insensitive
+          const removido = equipamentoCompleto.replace(re, '').trim();
+          if (removido) return removido;
+          // fallback: se ficou vazio, mostra uma versão curta útil
+          return equipamentoCompleto.length > 10 ? equipamentoCompleto.slice(-10) : equipamentoCompleto;
+        })();
+
+        html += `
+          <tr data-index="${idx}">
+            <td>${esc(tipo)}</td>
+            <td onclick="mostrarEquipamento(this, '${esc(equipamentoCompleto)}', '${esc(tipo)}')"
+                style="cursor:pointer;"
+                title="Clique para ver completo">
+              ${esc(eqCurtoCalc)}
+            </td>
+            <td contenteditable="true" onblur="tabelaGeo[${idx}].Ativo=this.innerText">${esc(p.Ativo)}</td>
+            <td onclick="mostrarProtocolo(this, '${esc(protocoloCompleto)}')"
+                style="cursor:pointer;"
+                title="Clique para ver completo">
+              ${esc(protocoloCurto)}
+            </td>
+            <td contenteditable="true" onblur="tabelaGeo[${idx}].Azimute=this.innerText">${esc(p.Azimute)}</td>
+            <td onclick="mostrarLatLon(this, '${esc(latCompleta)}', 10)"
+                style="cursor:pointer;"
+                title="Clique para ver completo">
+              ${esc(latCurta)}
+            </td>
+            <td onclick="mostrarLatLon(this, '${esc(lonCompleta)}', 10)"
+                style="cursor:pointer;"
+                title="Clique para ver completo">
+              ${esc(lonCurta)}
+            </td>
+            <td style="text-align:left;">
+              <button onclick="plotarNoMapa('${esc(p.Latitude)}', '${esc(p.Longitude)}', '${esc(p.Tipo)}', '${esc(p.Equipamento)}', ${azimute}, ${idx})" class="btn-acao btn-fechar">📍</button>
+            </td>
+            <td style="text-align:left;">
+              <button onclick="editarLinha(${idx})" class="btn-acao btn-fechar" title="Editar linha">✏️</button>
+            </td>
+          </tr>
+        `;
+      });
+
+      html += `</tbody></table>`;
+
+      // Botões no rodapé
+      html += `
+        <div class="tabela-actions" style="margin-top:8px;">
+          <button onclick="criarLinha()" class="btn-acao btn-fechar">
+            <img src="https://cdn-icons-png.flaticon.com/512/1665/1665680.png" 
+                alt="Nova linha" style="width:20px;height:20px;">
+          </button>            
+          <button onclick="baixarCSV()" class="btn-acao btn-fechar">
+            <img src="https://cdn-icons-png.flaticon.com/512/12809/12809885.png" 
+                alt="Salvar csv" style="width:20px;height:20px;">
+          </button>
+          <button onclick="fecharPainel()" class="btn-acao btn-fechar">
+            <img src="https://cdn-icons-png.flaticon.com/128/4034/4034637.png" 
+                alt="Fechar" class="icon-fechar">
+          </button>           
+        </div>
+      `;
+
+      return html;
+    }
+    function mostrarProtocolo(td, valorCompleto) {
+      td.innerText = (td.innerText === valorCompleto)
+        ? valorCompleto.slice(-6)
+        : valorCompleto;
+    }
+
+    function mostrarLatLon(td, valorCompleto, n = 10) {
+      td.innerText = (td.innerText === valorCompleto)
+        ? valorCompleto.slice(-n)
+        : valorCompleto;
+    }
+
+    function mostrarEquipamento(td, valorCompleto, tipo) {
+      const curto = (() => {
+        if (!tipo) return valorCompleto;
+        const re = new RegExp(tipo.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+        const removido = valorCompleto.replace(re, '').trim();
+        if (removido) return removido;
+        return valorCompleto.length > 10 ? valorCompleto.slice(-10) : valorCompleto;
+      })();
+
+      td.innerText = (td.innerText === valorCompleto)
+        ? curto
+        : valorCompleto;
+    }
 
       function fecharPainel() {
         limparBusca();
@@ -924,21 +992,27 @@
               painel.style.display = "block";
 
               setTimeout(() => {
-                const tabelaEl = document.querySelector("#containerTabelaGeo");
+                const tabelaEl = document.querySelector("#containerTabelaGeo"); // pega a TAG <table>
+ 
                 if (!tabelaEl) return;
 
+                if (idDataTable) idDataTable.destroy();  
+                painel.style.display = "block";             
                 idDataTable = new DataTable(tabelaEl, {
                   searchable: true,
                   sortable: true,
-                  perPage: 15,
+                  perPage: 10, // número inicial de registros por página
+                  perPageSelect: [10,15, 30, 50, 100], // opções que aparecem no seletor
+
+                  fixedHeight: false, // força respeitar o perPage
                   labels: {
-                    placeholder: "Buscar...",
+                    placeholder: "🔍 Buscar...",
                     perPage: "{select} registros por página",
                     noRows: "Nenhum registro encontrado",
                     info: "Mostrando {start} até {end} de {rows} registros"
                   }
                 });
-
+  
                 if (linhaReferencia) {
                   idDataTable.search(linhaReferencia);
                 }
