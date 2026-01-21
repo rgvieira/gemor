@@ -535,7 +535,8 @@
     let idDataTable = null; // variável global
     let linhaReferencia = null; // guarda índice da última linha clicada
     const separador = ";"; //Separador de arquivo csv
-
+    let mapa;
+    let marcadorUsuario;
     const nivelZoom = 18;
 
     // Array para armazenar coordenadas das casas
@@ -686,10 +687,15 @@
  
 
     tabelaGeo = tabAux ? tabAux : tabelaGeo
+    let azimuteLayer;
+   
     inicializaMapa(tituloMapa);
     map.whenReady(() => {
+      azimuteLayer = L.layerGroup().addTo(map);
      // adicionarMarcadorLeaflet(map, geoLocalizacaoRecinto    )  
       plotarTabelaGeorreferencimento(tabelaGeo, map);
+      // LayerGroup que vai receber todos os gráficos
+      
       if(geoLocalizacaoRecintos) 
          plotarRecintos(geoLocalizacaoRecintos, map);
     });
@@ -1104,6 +1110,287 @@
       link.click();
     }
 
+    function iniciarGeolocalizacao() {
+      if (!navigator.geolocation) {
+        desligarLocalizacao("Geolocalização não suportada");
+        return;
+      }
+
+      watchId = navigator.geolocation.watchPosition(
+        atualizarPosicao,
+        tratarErroGeolocalizacao,
+        {
+          enableHighAccuracy: true,
+          maximumAge: 5000,
+          timeout: 10000
+        }
+      );
+    }
+
+    function atualizarTooltipBotao(lat, lon, acc, fonte) {
+      const btn = document.getElementById("btnLocalizacao");
+      btn.title = `Lat: ${lat.toFixed(6)}, Lon: ${lon.toFixed(6)}, Precisão: ${acc}m, Fonte: ${fonte}`;
+    }
+
+    async function obterLocalizacao() {
+      // Tenta GPS primeiro
+      if (navigator.geolocation) {
+        try {
+          return await new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(
+              (pos) => {
+                resolve({
+                  lat: pos.coords.latitude,
+                  lon: pos.coords.longitude,
+                  acc: pos.coords.accuracy,
+                  fonte: "GPS"
+                });
+              },
+              (err) => reject(err),
+              { enableHighAccuracy: true, timeout: 10000 }
+            );
+          });
+        } catch (err) {
+          console.warn("GPS indisponível:", err.message);
+        }
+      }
+
+      // Fallback: IP
+      try {
+        const resp = await fetch("https://ipapi.co/json/", { mode: "cors" });
+        const data = await resp.json();
+        return {
+          lat: data.latitude,
+          lon: data.longitude,
+          acc: 5000, // IP é muito impreciso
+          fonte: "IP"
+        };
+      } catch (err) {
+        console.error("Não foi possível obter localização via IP:", err);
+        return null;
+      }
+    }
+
+    // Plota marcador no mapa
+    function plotarUsuario(lat, lon, acc, fonte) {
+        if (marcadorUsuario) mapa.removeLayer(marcadorUsuario);
+
+        marcadorUsuario = L.marker([lat, lon], {
+            icon: L.icon({
+                iconUrl: 'icone-localizacao.png',
+                iconSize: [35, 35]
+            })
+        }).addTo(mapa);
+
+        marcadorUsuario.bindPopup(`Fonte: ${fonte}<br>Lat: ${lat.toFixed(6)}, Lon: ${lon.toFixed(6)}<br>Precisão: ${acc}m`).openPopup();
+        mapa.setView([lat, lon], 16);
+    }
+
+    // Atualiza tooltip do botão
+    function atualizarTooltipBotao(lat, lon, acc, fonte) {
+        const btn = document.querySelector('.botao-mapa');
+        btn.title = `Fonte: ${fonte}\nLat: ${lat.toFixed(6)}\nLon: ${lon.toFixed(6)}\nPrecisão: ${acc}m`;
+    }
+
+    // Trata erros de geolocalização
+    function tratarErroGeolocalizacao(error) {
+        let msg;
+        switch(error.code) {
+            case error.PERMISSION_DENIED:
+                msg = "GPS indisponível: permissão negada";
+                break;
+            case error.POSITION_UNAVAILABLE:
+                msg = "GPS indisponível: posição não disponível";
+                break;
+            case error.TIMEOUT:
+                msg = "GPS indisponível: timeout";
+                break;
+            default:
+                msg = "GPS indisponível: erro desconhecido";
+        }
+        mostrarAlerta(msg);
+    }
+
+    function atualizarPosicao(pos) {
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+      const acc = pos.coords.accuracy;
+      const fonte = pos.fonte || "GPS";
+
+      const btn = document.getElementById("toggleLocationBtn");
+
+      // Tooltip DO BOTÃO
+      btn.title =
+        `Latitude: ${lat.toFixed(6)}\n` +
+        `Longitude: ${lon.toFixed(6)}\n` +
+        `Precisão: ${acc.toFixed(1)} m`;
+
+      const coord = [lat, lon];
+
+      // Ícone próprio
+      const icon = L.divIcon({
+        className: '',
+        html: `
+          <div style="
+            width:18px;
+            height:18px;
+            background:#2563eb;
+            border:3px solid white;
+            border-radius:50%;
+            box-shadow:0 0 8px rgba(37,99,235,.8);
+          "></div>
+        `,
+        iconAnchor: [9, 9]
+      });
+
+      if (!markerLocalizacao) {
+        markerLocalizacao = L.marker(coord, { icon }).addTo(map);
+        map.setView(coord, 17);
+      } else {
+        markerLocalizacao.setLatLng(coord);
+      }
+
+      // Círculo de precisão
+      if (!circlePrecisao) {
+        circlePrecisao = L.circle(coord, {
+          radius: acc,
+          color: "#2563eb",
+          fillColor: "#93c5fd",
+          fillOpacity: 0.25,
+          weight: 2
+        }).addTo(map);
+      } else {
+        circlePrecisao.setLatLng(coord);
+        circlePrecisao.setRadius(acc);
+      }
+    }
+
+
+
+    function desligarLocalizacao(motivo) {
+      const btn = document.getElementById("toggleLocationBtn");
+
+      trackingAtivo = false;
+
+      if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+      watchId = null;
+
+      if (markerLocalizacao) map.removeLayer(markerLocalizacao);
+      if (circlePrecisao) map.removeLayer(circlePrecisao);
+
+      markerLocalizacao = null;
+      circlePrecisao = null;
+
+      btn.style.background = "#f8fafc";
+      btn.style.color = "#0f172a";
+      btn.title = motivo || "Ativar geolocalização";
+}
+
+
+    function atualizarTooltipBotao(lat, lon, acc, fonte) {
+      const btn = document.getElementById("toggleLocationBtn");
+
+      btn.title =
+        `Fonte: ${fonte}\n` +
+        `Latitude: ${lat.toFixed(6)}\n` +
+        `Longitude: ${lon.toFixed(6)}\n` +
+        `Precisão: ${acc.toFixed(0)} m`;
+    }
+
+
+    function atualizarPosicao(pos) {
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+      const acc = pos.coords.accuracy;
+      const fonte = pos.fonte || "GPS";
+
+      const btn = document.getElementById("toggleLocationBtn");
+
+      // Tooltip DO BOTÃO
+      btn.title =
+        `Latitude: ${lat.toFixed(6)}\n` +
+        `Longitude: ${lon.toFixed(6)}\n` +
+        `Precisão: ${acc.toFixed(1)} m`;
+
+      const coord = [lat, lon];
+
+      // Ícone próprio
+      const icon = L.divIcon({
+        className: '',
+        html: `
+          <div style="
+            width:18px;
+            height:18px;
+            background:#2563eb;
+            border:3px solid white;
+            border-radius:50%;
+            box-shadow:0 0 8px rgba(37,99,235,.8);
+          "></div>
+        `,
+        iconAnchor: [9, 9]
+      });
+
+      if (!markerLocalizacao) {
+        markerLocalizacao = L.marker(coord, { icon }).addTo(map);
+        map.setView(coord, 17);
+      } else {
+        markerLocalizacao.setLatLng(coord);
+      }
+
+      // Círculo de precisão
+      if (!circlePrecisao) {
+        circlePrecisao = L.circle(coord, {
+          radius: acc,
+          color: "#2563eb",
+          fillColor: "#93c5fd",
+          fillOpacity: 0.25,
+          weight: 2
+        }).addTo(map);
+      } else {
+        circlePrecisao.setLatLng(coord);
+        circlePrecisao.setRadius(acc);
+      }
+    }
+
+
+    function obterLocalizacaoMultiFonte() {
+      if ("geolocation" in navigator) {
+        watchId = navigator.geolocation.watchPosition(
+          pos => {
+            mostrarCoords(
+              pos.coords.latitude,
+              pos.coords.longitude,
+              pos.coords.accuracy,
+              "GPS / Navegador"
+            );
+          },
+          err => {
+            console.warn("GPS falhou, usando IP:", err.message);
+            obterLocalizacaoPorIP();
+          },
+          {
+            enableHighAccuracy: true,
+            maximumAge: 5000,
+            timeout: 10000
+          }
+        );
+      } else {
+        obterLocalizacaoPorIP();
+      }
+    }
+
+
+
+    function mostrarCoords(lat, lon, acc, fonte) {
+      mapaStatus.update(`
+        📡 <b>Localização ativa</b><br>
+        <b>Lat:</b> ${lat.toFixed(6)}<br>
+        <b>Lon:</b> ${lon.toFixed(6)}<br>
+        <b>Precisão:</b> ${typeof acc === "number" ? acc.toFixed(1) + " m" : acc}<br>
+        <span style="opacity:.7">Fonte: ${fonte}</span>
+      `);
+    }
+
   // Função para plotar marcador no mapa com mais informações
     function plotarNoMapa(lat, lng, tipo, equipamento, azimute,index) {
       // Armazena a linha de referência
@@ -1144,91 +1431,99 @@
       }
     }
 
-    // Controle Leaflet para abrir/fechar painel
 
-    L.Control.Excel = L.Control.extend({
-        onAdd: function(map) {
-          const btn = L.DomUtil.create(
-            "button",
-            "leaflet-bar leaflet-control leaflet-control-custom btn-acao btn-fechar"
+
+      // Função principal de geolocalização
+      function obterLocalizacaoUsuario() {
+          if (!navigator.geolocation) {
+              console.warn('Geolocalização não suportada neste navegador');
+              return;
+          }
+
+          navigator.geolocation.getCurrentPosition(
+              (pos) => {
+                  const loc = {
+                      lat: pos.coords.latitude,
+                      lon: pos.coords.longitude,
+                      acc: pos.coords.accuracy,
+                      fonte: 'GPS'
+                  };
+                  plotarUsuario(loc.lat, loc.lon, loc.acc, loc.fonte);
+                  atualizarTooltipBotao(loc.lat, loc.lon, loc.acc, loc.fonte);
+              },
+              (error) => {
+                  console.warn('GPS indisponível: ' + error.message);
+                  // Fallback: só centraliza no mapa sem GPS
+                  map.setView([-15.7797, -47.9297], 6);
+                  // opcional: mostrar mensagem ao usuário
+              },
+              { enableHighAccuracy: true, timeout: 10000 }
           );
+      }
 
-          btn.innerHTML = `
-            <img src="https://cdn-icons-png.flaticon.com/512/2535/2535554.png" 
-                alt="Coordenadas" style="width:20px;height:20px;">
-          `;
-          btn.title = "Apresenta/oculta tabela georreferenciamento";
+      
+      // === Helpers (no topo do arquivo) ===
 
-          L.DomEvent.disableClickPropagation(btn);
+      function clearAzimuteLayer() {
+        azimuteLayer.clearLayers();
+      }
+      // Limpar todos os gráficos de azimute no mapa
+      function limparAzimuteOverlay() {
+          azimuteLayer.clearLayers();
+      }
 
-          btn.onmousedown = function () {
-            btn.style.boxShadow = "0 2px #0D47A1";
-            btn.style.transform = "translateY(2px)";
-          };
-          btn.onmouseup = function () {
-            btn.style.boxShadow = "0 4px #0D47A1";
-            btn.style.transform = "translateY(0)";
-          };
+      function clearMarkerClusters(mapInstance) {
+          markersCluster.clearLayers();
+      }
 
-          btn.onclick = function() {
-            const painel = document.getElementById("painelTabela");
-            const wrapper = painel.querySelector(".table-wrapper");
-            const displayAtual = window.getComputedStyle(painel).display;
+      function plotarConeAzimute(lat, lng, azimute, abertura = 40, alcance = 40) {
+        const passos = 15;
 
-            if (displayAtual === "none") {
-              // 👉 abrir painel
-              if (!tabelaGeo || tabelaGeo.length === 0 || (tabelaGeo.length > 0 && !tabelaGeo[0].Tipo)) {
-              
-                // se tabelaGeo estiver vazio, chama diretamente a função de upload
-                mostrarAlerta('Faça Upload do arquivo com as coordenadas.')
-          
-                return; // não abre painel vazio
-              }
+        // Validações mínimas (mantendo a ideia original de "não plotar nada" em casos inválidos)
+      // 🔑 normalização explícita
+        const latNum = Number(lat);
+        const lngNum = Number(lng);
+        const azNum  = Number(azimute);
 
-              const htmlTabela = gerarTabelaHTML(tabelaGeo);
-              wrapper.innerHTML = htmlTabela;
-              painel.style.display = "block";
+        if (
+          !Number.isFinite(latNum) ||
+          !Number.isFinite(lngNum) ||
+          !Number.isFinite(azNum) ||
+          azNum === 0
+        ) {
+          return L.layerGroup();
+        }
 
-              setTimeout(() => {
-                const tabelaEl = document.querySelector("#containerTabelaGeo"); // pega a TAG <table>
+        // Distância linear aproximada em graus (1° ~ 111.32 km na latitude média)
+      const d = alcance / 111320;
 
-                if (!tabelaEl) return;
+      const pontos = [];
+      for (let i = -abertura / 2; i <= abertura / 2; i += abertura / passos) {
+        const ang = (azNum + i - 90) * Math.PI / 180;
+        pontos.push([
+          latNum + d * Math.sin(ang),
+          lngNum + d * Math.cos(ang)
+        ]);
+      }
 
-                if (idDataTable) idDataTable.destroy();  
-                painel.style.display = "block";             
-                idDataTable = new DataTable(tabelaEl, {
-                  searchable: true,
-                  sortable: true,
-                  perPage: 10, // número inicial de registros por página
-                  perPageSelect: [10,15, 30, 50, 100], // opções que aparecem no seletor
+      pontos.unshift([latNum, lngNum]);
 
-                  fixedHeight: false, // força respeitar o perPage
-                  labels: {
-                    placeholder: "🔍 Buscar...",
-                    perPage: "{select} registros por página",
-                    noRows: "Nenhum registro encontrado",
-                    info: "Mostrando {start} até {end} de {rows} registros"
-                  }
-                });
-  
-                if (linhaReferencia) {
-                  idDataTable.search(linhaReferencia);
-                }
-              }, 250);
+        // Retorna o polígono (cone) conforme seu estilo original
+        return L.polygon(pontos, {
+          color: 'blue',
+          fillColor: 'blue',
+          fillOpacity: 0.15,
+          weight: 1
+        });
+      }
 
-            } else {
-              painel.style.display = "none";
-            }
-          };
+      function clearGraficosAzimute() {
+        if (window.azimuteLayer) {
+          window.azimuteLayer.clearLayers();
+          return 'azimutes limpos';
+        }
+      }
 
-          return btn;
-        },
-        onRemove: function(map) {}
-      });
-
-      map.addControl(new L.Control.Excel({ position: 'topright' }));
-
-      //Função inicializar mapa
 
       function inicializaMapa(tituloMapa) {
         if(isTracing) console.log('inicializaMapa');
@@ -1252,6 +1547,8 @@
           });
 
 
+
+
           map.setView([-15.7797, -47.9297], 6)
           /* Valores mais comuns de zoom
               🔹 Valores mais comuns
@@ -1266,6 +1563,8 @@
           */
           ////////////////////////////////
 
+          // === Layer exclusivo para azimutes ===
+          window.azimuteLayer = L.layerGroup().addTo(map);
                     
           // 1) Remover o zoom que o Leaflet adiciona por padrão
           map.zoomControl.remove();
@@ -1281,7 +1580,7 @@
           };
           title.addTo(map);
 
-          // 3) Adicionar novamente o controle de zoom no topo esquerdo,
+          // 3) Adicionar  o controle de zoom no topo esquerdo,
           //    abaixo do título (carregado antes)
           L.control.zoom({ position: 'topleft' }).addTo(map);
 
@@ -1298,7 +1597,7 @@
           }).addTo(map);
           
 
-
+    
   
           // Função de clique no mapa
           function onMapClick(e) {
@@ -1310,18 +1609,17 @@
             const centro = map.getCenter();
             const azimute = calcularAzimute(centro.lat, centro.lng, lat, lng);
 
-            const canvas = gerarGraficoAzimute(azimute);
 
-            const container = document.createElement("div");
-            container.innerHTML = `
-              <b>Coordenadas:</b><br>
-              Latitude: ${lat.toFixed(6)}<br>
-              Longitude: ${lng.toFixed(6)}<br>
-              Azimute em relação ao norte: ${azimute.toFixed(2)}°
-              <br><br>
-            `;
-            container.appendChild(canvas);
-
+           // Mostra popup só com texto (opcional)
+            L.popup()
+              .setLatLng([lat, lng])
+              .setContent(`
+                <b>Coordenadas:</b><br>
+                Latitude: ${lat.toFixed(6)}<br>
+                Longitude: ${lng.toFixed(6)}<br>
+                Azimute em relação ao norte: ${azimute.toFixed(2)}°
+              `)
+              .openOn(map);
             // 👉 botão para copiar
             const btnCopiar = document.createElement("button");
             btnCopiar.textContent = "📋 Copiar coordenadas";
@@ -1341,6 +1639,98 @@
               .openOn(map);
           }
 
+        /*
+✅ OPÇÃO 3 — Camadas / overlays
+<i class="fa-solid fa-layer-group" style="color:darkblue;"></i>
+
+
+🔹 Ideal se a função for ligar/desligar visualizações
+
+✅ OPÇÃO 4 — Desenho / geometria
+<i class="fa-solid fa-draw-polygon" style="color:darkblue;"></i>
+
+
+🔹 Perfeito para polígonos, áreas, recintos
+
+✅ OPÇÃO 5 — Radar / direção (se envolve azimute)
+<i class="fa-solid fa-compass" style="color:darkblue;"></i>
+
+
+🔹 Excelente se o botão ativa cones de azimute
+
+🔧 SUBSTITUIÇÃO DIRETA NO SEU CÓDIGO
+🔁 TROQUE APENAS ESTA LINHA:
+container.innerHTML = '<i class="fa-solid fa-chart-line" style="color:darkblue;"></i>';
+
+✅ POR (exemplo recomendado):
+container.innerHTML = '<i class="fa-solid fa-map-location-dot" style="color:darkblue;"></i>';
+
+🎨 PEQUENA MELHORIA VISUAL (OPCIONAL)
+
+Se quiser dar mais “cara de botão Leaflet”:
+
+container.style.borderRadius = "4px";
+container.style.boxShadow = "0 1px 4px rgba(0,0,0,0.3)";
+
+🧠 RECOMENDAÇÃO FINAL
+
+Se a função:
+
+plota pontos, áreas e cones → fa-map-location-dot
+
+plota polígonos/recintos → fa-draw-polygon
+
+liga/desliga camadas → fa-layer-group
+
+envolve azimute/direção → fa-compass
+
+Se quiser, me diga exatamente o que o botão faz (plotar tudo, toggle, azimute, área, etc.) que eu te indico o melhor ícone possível 👍
+
+        */
+
+          const TogglePlotControl = L.Control.extend({
+              options: { position: "topright" },
+
+              onAdd: function () {
+                  const container = L.DomUtil.create("div", "leaflet-bar leaflet-control leaflet-control-custom");
+
+                  container.innerHTML = '<i class="fa-solid fa-location-dot" style="color:darkblue;"></i>';
+                  container.style.backgroundColor = "white";
+                  container.style.cursor = "pointer";
+                  container.style.fontSize = "18px";
+                  container.style.textAlign = "center";
+                  container.style.lineHeight = "27px";
+                  container.style.width = "20px";
+                  container.style.height = "27px";
+
+                  let nextAction = "clear";
+                  L.DomEvent.disableClickPropagation(container);
+
+                  container.onclick = function () {
+                      try {
+                          if (nextAction === "clear") {
+                              clearMarkerClusters(map);
+                              limparAzimuteOverlay();
+                              container.style.backgroundColor = "white";
+                              nextAction = "plot";
+                          } else {
+                              plotarTabelaGeorreferencimento(tabelaGeo, map);
+                              container.style.backgroundColor = "#cce5ff";
+                              nextAction = "clear";
+                          }
+                      } catch (err) {
+                          console.error("Erro no TogglePlotControl:", err);
+                      }
+                  };
+
+                  return container;
+              }
+          });
+
+          map.addControl(new TogglePlotControl());
+
+
+
           // Controle personalizado click no mapa para as coordenadas
           const ToggleCoordsControl = L.Control.extend({
             options: { position: "topright" },
@@ -1355,7 +1745,7 @@
               container.style.cursor = "pointer";
               container.style.fontSize = "18px";
               container.style.textAlign = "center";
-              container.style.lineHeight = "30px";
+              container.style.lineHeight = "27px";
               container.style.width = "20px";
               container.style.height = "27px";
 
@@ -1506,53 +1896,108 @@
             reader.readAsText(arquivo);
           });
 
-        // --- Controle de Cursores Leaflet ---
-        var CursorMenu = L.Control.extend({
-            options: { position: 'topright' },
 
-            onAdd: function(map) {
-                var container = L.DomUtil.create('div', 'cursor-menu-container');
-                
-                // Botão de Ativação
-                var mainBtn = L.DomUtil.create('div', 'cursor-btn', container);
-                mainBtn.innerHTML = '<i class="fas fa-mouse-pointer"></i>';
-                mainBtn.title = "Alterar modo do cursor";
+      // --- Controle de Cursores Leaflet ---
 
-                // Div de Opções
-                var optionsDiv = L.DomUtil.create('div', 'cursor-options', container);
-                
-                // Opções relacionadas ao uso no Leaflet:
-                // [Ícone, Valor CSS, Tooltip]
-                var cursors = [
-                    ['fas fa-hand-paper', 'grab', 'Navegação (Mão Aberta)'],
-                    ['fas fa-hand-pointer', 'pointer', 'Seleção (Mão com Dedo)'],
-                    ['fas fa-expand-arrows-alt', 'crosshair', 'Precisão/Desenho (Mira)'],
-                    ['fas fa-arrow-up-right-from-square', 'default', 'Padrão Sistema']
-                ];
+// --- Controle de Cursores Leaflet ---
+var CursorMenu = L.Control.extend({
+  options: { position: 'topright' },
 
-                cursors.forEach(function(c) {
-                    var optBtn = L.DomUtil.create('div', 'cursor-btn', optionsDiv);
-                    optBtn.innerHTML = `<i class="${c[0]}"></i>`;
-                    optBtn.title = c[2];
-                    
-                    optBtn.onclick = function() {
-                        // Aplica ao container do mapa
-                        map.getContainer().style.cursor = c[1];
-                        // Opcional: fechar ao clicar
-                        optionsDiv.style.display = 'none';
-                    };
-                });
+  onAdd: function (map) {
+    // Container do controle (UM botão só)
+    const container = L.DomUtil.create(
+      "div",
+      "leaflet-bar leaflet-control leaflet-control-custom cursor-menu-container"
+    );
 
-                L.DomEvent.disableClickPropagation(container);
+    // Ícone no próprio container (ajuste 'fa' para 'fas' ou 'fa-solid' conforme sua versão do FA)
+    container.innerHTML = '<i class="fa fa-mouse-pointer" style="color:darkblue;"></i>';
 
-                mainBtn.onclick = function() {
-                    var isVisible = optionsDiv.style.display === 'flex';
-                    optionsDiv.style.display = isVisible ? 'none' : 'flex';
-                };
+    // Aparência idêntica ao ToggleCoordsControl
+    container.style.backgroundColor = "white";
+    container.style.cursor = "pointer";
+    container.style.fontSize = "18px";
+    container.style.textAlign = "center";
+    container.style.lineHeight = "27px";
+    container.style.width = "20px";
+    container.style.height = "27px";
+    container.style.position = "relative"; // base para o dropdown
 
-                return container;
-            }
-        });
+    // Evita propagação para o mapa
+    L.DomEvent.disableClickPropagation(container);
+    L.DomEvent.disableScrollPropagation(container);
+
+    // Menu de opções (HORIZONTAL)
+    const optionsDiv = L.DomUtil.create("div", "cursor-options", container);
+    optionsDiv.style.display = "none";
+    optionsDiv.style.position = "absolute";
+    optionsDiv.style.top = "30px";    // logo abaixo do botão
+    optionsDiv.style.right = "40px";     // alinhado à direita do botão
+    optionsDiv.style.backgroundColor = "white";
+    optionsDiv.style.border = "1px solid #ccc";
+    optionsDiv.style.zIndex = "1000";
+    optionsDiv.style.boxShadow = "0 1px 3px rgba(0,0,0,0.2)";
+    optionsDiv.style.flexDirection = "row";   // horizontal
+    optionsDiv.style.alignItems = "stretch";
+    optionsDiv.style.whiteSpace = "nowrap";
+    optionsDiv.style.padding = "0";
+
+    // Opções de cursor
+    // Se estiver com FA5, troque 'fa' (ou 'fa-solid') por 'fas' aqui também.
+    const cursors = [
+      ['fa fa-hand-paper', 'grab', 'Navegação (Mão Aberta)'],
+      ['fa fa-hand-pointer', 'pointer', 'Seleção (Mão com Dedo)'],
+      ['fa fa-crosshairs', 'crosshair', 'Precisão/Desenho (Mira)'],
+      ['fa fa-arrow-up-right-from-square', 'default', 'Padrão Sistema']
+    ];
+
+    cursors.forEach(function (c, idx) {
+      const optBtn = L.DomUtil.create("div", "cursor-btn", optionsDiv);
+      optBtn.innerHTML = `<i class="${c[0]}"></i>`;
+      optBtn.title = c[2];
+
+      // Estilo dos itens na horizontal
+      optBtn.style.display = "inline-flex";
+      optBtn.style.alignItems = "center";
+      optBtn.style.gap = "8px";
+      optBtn.style.padding = "6px 10px";
+      optBtn.style.cursor = "pointer";
+      optBtn.style.userSelect = "none";
+      optBtn.style.background = "white";
+
+      // Divisor vertical entre itens
+      if (idx < cursors.length - 1) {
+        optBtn.style.borderRight = "1px solid #e0e0e0";
+      }
+
+      optBtn.onmouseenter = function () {
+        optBtn.style.background = "#f2f2f2";
+      };
+      optBtn.onmouseleave = function () {
+        optBtn.style.background = "white";
+      };
+      optBtn.onclick = function (e) {
+        e.stopPropagation();
+        map.getContainer().style.cursor = c[1];
+        optionsDiv.style.display = "none";
+      };
+    });
+
+    // Toggle do dropdown no PRÓPRIO container (UM botão)
+    L.DomEvent.on(container, "click", function (e) {
+      L.DomEvent.stop(e);
+      optionsDiv.style.display =
+        optionsDiv.style.display === "flex" ? "none" : "flex";
+    });
+
+    // Fecha ao clicar fora
+    document.addEventListener("click", function onDocClick(ev) {
+      if (!container.contains(ev.target)) optionsDiv.style.display = "none";
+    });
+
+    return container;
+  }
+});
 
         map.addControl(new CursorMenu());
 
@@ -1627,6 +2072,89 @@
           const  precisaoAgrupamentoMinimo = 50;
           const  precisaoAgrupamentoMaximo = 150;
 
+        // Controle Leaflet para abrir/fechar painel
+        L.Control.Excel = L.Control.extend({
+            onAdd: function(map) {
+              const btn = L.DomUtil.create(
+                "button",
+                "leaflet-bar leaflet-control leaflet-control-custom btn-acao btn-fechar"
+              );
+
+              btn.innerHTML = `
+                <img src="https://cdn-icons-png.flaticon.com/512/2535/2535554.png" 
+                    alt="Coordenadas" style="width:20px;height:20px;">
+              `;
+              btn.title = "Apresenta/oculta tabela georreferenciamento";
+
+              L.DomEvent.disableClickPropagation(btn);
+
+              btn.onmousedown = function () {
+                btn.style.boxShadow = "0 2px #0D47A1";
+                btn.style.transform = "translateY(2px)";
+              };
+              btn.onmouseup = function () {
+                btn.style.boxShadow = "0 4px #0D47A1";
+                btn.style.transform = "translateY(0)";
+              };
+
+              btn.onclick = function() {
+                const painel = document.getElementById("painelTabela");
+                const wrapper = painel.querySelector(".table-wrapper");
+                const displayAtual = window.getComputedStyle(painel).display;
+
+                if (displayAtual === "none") {
+                  // 👉 abrir painel
+                  if (!tabelaGeo || tabelaGeo.length === 0 || (tabelaGeo.length > 0 && !tabelaGeo[0].Tipo)) {
+                  
+                    // se tabelaGeo estiver vazio, chama diretamente a função de upload
+                    mostrarAlerta('Faça Upload do arquivo com as coordenadas.')
+              
+                    return; // não abre painel vazio
+                  }
+
+                  const htmlTabela = gerarTabelaHTML(tabelaGeo);
+                  wrapper.innerHTML = htmlTabela;
+                  painel.style.display = "block";
+
+                  setTimeout(() => {
+                    const tabelaEl = document.querySelector("#containerTabelaGeo"); // pega a TAG <table>
+
+                    if (!tabelaEl) return;
+
+                    if (idDataTable) idDataTable.destroy();  
+                    painel.style.display = "block";             
+                    idDataTable = new DataTable(tabelaEl, {
+                      searchable: true,
+                      sortable: true,
+                      perPage: 10, // número inicial de registros por página
+                      perPageSelect: [10,15, 30, 50, 100], // opções que aparecem no seletor
+
+                      fixedHeight: false, // força respeitar o perPage
+                      labels: {
+                        placeholder: "🔍 Buscar...",
+                        perPage: "{select} registros por página",
+                        noRows: "Nenhum registro encontrado",
+                        info: "Mostrando {start} até {end} de {rows} registros"
+                      }
+                    });
+      
+                    if (linhaReferencia) {
+                      idDataTable.search(linhaReferencia);
+                    }
+                  }, 250);
+
+                } else {
+                  painel.style.display = "none";
+                }
+              };
+
+              return btn;
+            },
+            onRemove: function(map) {}
+          });
+
+          map.addControl(new L.Control.Excel({ position: 'topright' }));
+
 
           // Grupo de clusters (configurando para não estourar o mapa ao clicar)
           markersCluster = L.markerClusterGroup({
@@ -1652,10 +2180,6 @@
             // Se quiser abrir um pouco mais os pontos quando spiderfying:
             spiderfyDistanceMultiplier: 1.2 // opcional; abre mais espaço entre marcadores
           });
-          
-
-
-
           map.on("click", onMapClick);
 
       }
@@ -1712,13 +2236,13 @@
         let arrayIcones = [
                             {tipo: "Recinto (ponto)" , url: "escala-industrial.png",icone:"https://cdn-icons-png.flaticon.com/128/684/684908.png" },
                             {tipo: "Balança (ponto)" , url: "escala-industrial.png",icone:"https://cdn-icons-png.flaticon.com/512/8248/8248483.png" },
-                            {tipo: "Catraca e similares (ponto)", url: "torniquetes.png",icone:"https://cdn-icons-png.flaticon.com/512/1185/1185509.png" },
-                            {tipo: "Câmera (ponto)", url: "camera-ctv.png",icone: "https://cdn-icons-png.flaticon.com/512/10073/10073813.png"},
-                            {tipo: "Portão, gate e similares (ponto)", url: "boom_gate2.png",icone:"https://cdn-icons-png.flaticon.com/512/4999/4999239.png" },
+                            {tipo: "Catraca e similares (ponto)", url: "torniquetes.png",icone:"https://cdn-icons-png.flaticon.com/512/3205/3205227.png" },
+                            {tipo: "Câmera (ponto)", url: "camera-ctv.png",icone: "https://cdn-icons-png.flaticon.com/512/5388/5388847.png"},
+                            {tipo: "Portão, gate e similares (ponto)", url: "boom_gate2.png",icone:"https://cdn-icons-png.flaticon.com/512/16867/16867628.png" },
                             {tipo: "Portêiner (ponto)", url: "portainer.png",icone: "https://cdn-icons-png.flaticon.com/512/11860/11860966.png"},
                             
                             {tipo: "Recinto (polígono)", url: "area.png",icone: "https://cdn-icons-png.flaticon.com/512/12355/12355988.png"},
-                            {tipo: "Scanner (ponto)", url:  "barcode-scanner_2605593.png",icone: "https://cdn-icons-png.flaticon.com/512/4652/4652615.png"},
+                            {tipo: "Scanner (ponto)", url:  "barcode-scanner_2605593.png",icone: "https://cdn-icons-png.flaticon.com/512/4482/4482023.png"},
                             {tipo: "Área de armazenamento de lotes (polígono)", url: "icons8-armazém-80.png",icone:"https://cdn-icons-png.flaticon.com/512/754/754877.png" },
                             {tipo: "Área de conferência física (polígono)", url: "peso.png",icone: "https://cdn-icons-png.flaticon.com/512/16355/16355158.png"},
                             {tipo: "Área de posicionamento de contêineres (polígono)", url: "Container_Red_icon-icons.com_54903.png",icone:"https://cdn-icons-png.flaticon.com/512/1254/1254256.png" },
@@ -1767,66 +2291,7 @@
       }
       // Função que desenha gráfico de azimute em canvas
 
-      function gerarGraficoAzimute(azimute) {
-        const canvas = document.createElement("canvas");
-        canvas.width = 220;
-        canvas.height = 220;
-        const ctx = canvas.getContext("2d");
-
-        // fundo
-        ctx.fillStyle = "#f9f9f9";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        // círculo da bússola
-        ctx.beginPath();
-        ctx.arc(110, 110, 80, 0, 2 * Math.PI);
-        ctx.strokeStyle = "#333";
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        // ângulos de 45 em 45 graus
-        ctx.fillStyle = "black";
-        ctx.font = "bold 8px Arial";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-
-        for (let angle = 0; angle < 360; angle += 45) {
-          const rad = (angle - 90) * Math.PI / 180;
-          const x = 110 + 70 * Math.cos(rad);
-          const y = 110 + 70 * Math.sin(rad);
-          ctx.fillText(angle + "°", x, y);
-        }
-
-        // direções principais N, S, L, O em azul, fora do círculo
-        ctx.fillStyle = "blue";
-        ctx.font = "bold 14px Arial";
-
-        const offset = 95; // raio maior para jogar as letras para fora
-
-        // Norte (0°)
-        ctx.fillText("N", 110, 110 - offset);
-        // Sul (180°)
-        ctx.fillText("S", 110, 110 + offset);
-        // Leste (90°)
-        ctx.fillText("L", 110 + offset, 110);
-        // Oeste (270°)
-        ctx.fillText("O", 110 - offset, 110);
-
-        // desenhar linha do azimute
-        const radAz = (azimute - 90) * Math.PI / 180;
-        const xAz = 110 + 70 * Math.cos(radAz);
-        const yAz = 110 + 70 * Math.sin(radAz);
-
-        ctx.beginPath();
-        ctx.moveTo(110, 110);
-        ctx.lineTo(xAz, yAz);
-        ctx.strokeStyle = "red";
-        ctx.lineWidth = 3;
-        ctx.stroke();
-
-        return canvas;
-      }
-
+  
     // Função para calcular azimute em relação ao norte verdadeiro
       function calcularAzimute(lat1, lon1, lat2, lon2) {
         // Converter graus para radianos
@@ -1883,6 +2348,11 @@
 
       function plotarTabelaGeorreferencimento(tabelaGeo,mapInstance = map) {
         if(isTracing) console.log('plotarTabelaGeorreferencimento',tabelaGeo);
+
+         clearMarkerClusters(mapInstance);
+         limparAzimuteOverlay();
+        // Grupo que receberá polilinha, polígonos e marcadores do seu desenho
+        //const desenhoLayerGroup = L.featureGroup([], { meuIdentificadorDeCluster: true }).addTo(mapInstance);
 
         
         if (!mapInstance) {
@@ -1967,6 +2437,8 @@
               
                 latitude = parseFloat(getCoordenada(getPrimeiraOcorrencia(p.Latitude)));
                 longitude = parseFloat(getCoordenada(getPrimeiraOcorrencia(p.Longitude)));
+
+                const itemGroup = L.layerGroup()
                
                 let azimute = p.Azimute ? p.Azimute : 0.
 
@@ -1975,19 +2447,39 @@
                     // Define o título da página
                    // document.getElementById("map-title").innerHTML = p.Equipamento; 
                 }
-                  if(p.Tipo.search('Recinto')>=0) {
-                    
-                    //var markers = L.markerClusterGroup();
-                    var markers = L.markerClusterGroup();
-                    markers.addLayer(L.marker([latitude, longitude]).//bindPopup(p.Equipamento));
-                    bindPopup("<strong style='color:blue;'>" + p.Equipamento + "</strong>"));
+                if(p.Tipo.search('Recinto')>=0) {
+                  
+                  //var markers = L.markerClusterGroup();
+                  /*
+                  var markers = L.markerClusterGroup();
+                  markers.addLayer(L.marker([latitude, longitude]).//bindPopup(p.Equipamento));
+                  bindPopup("<strong style='color:blue;'>" + p.Equipamento + "</strong>"));
 
-                    mapInstance.addLayer(markers);
-                    continue;
+                  mapInstance.addLayer(markers);
+                  continue;
+                  */
+                  const itemGroup = L.layerGroup();
 
-                  }   
+                  const marker = L.marker([latitude, longitude])
+                    .bindPopup("<strong style='color:blue;'>" + p.Equipamento + "</strong>");
+
+                  itemGroup.addLayer(marker);
+                  markersCluster.addLayer(itemGroup);
+                  continue;                 
+
+                }   
                 //Se for câmera e houver azimute
-                if(p.Tipo.search('Câmera') >=0 && p.Azimute ){
+                //if(p.Tipo.search('Câmera') >=0 && p.Azimute ){
+                const latNum = Number(latitude);
+                const lngNum = Number(longitude);
+                const azNum  = Number(p.Azimute);
+
+                if (
+                  p.Tipo.search('Câmera') >= 0 &&
+                  Number.isFinite(latNum) &&
+                  Number.isFinite(lngNum) &&
+                  Number.isFinite(azNum)
+                ) {
                     // Usa a função para obter coordenadas e desenhar no mapa
                       var coordsCone = calcularCone(latitude, longitude, azimute, 40, 0.0005);
                       /*
@@ -1999,6 +2491,7 @@
                   fillOpacity: opacidade do preenchimento (0 = transparente, 1 = opaco).
                   opacity: opacidade da linha de contorno.
                       */
+                     /*
                   L.polygon(coordsCone, {
                     color: 'blue',        // cor da linha
                     weight: 1,            // espessura da linha
@@ -2006,6 +2499,9 @@
                     fillColor: 'blue',    // cor de preenchimento
                     fillOpacity: 0.09      // opacidade do preenchimento
                   }).addTo(mapInstance);
+                  */
+                    const cone = plotarConeAzimute(latitude, longitude, azimute);
+                    itemGroup.addLayer(cone);
 
 
 
@@ -2028,14 +2524,33 @@
                         </ul>
                     
                     `;
-
+                    /* 📌 O cone já foi criado junto com o marker, não precisa duplicar.
+                    marker
+                      .on('popupopen', () => {
+                        if (p.Azimute) {
+                          window.azimuteLayer.clearLayers();
+                          const cone = plotarConeAzimute(latitude, longitude, p.Azimute);
+                          window.azimuteLayer.addLayer(cone);
+                        }
+                      })
+                      .on('popupclose', () => {
+                        window.azimuteLayer.clearLayers();
+                      });
+                      */
                     if (p.Azimute) {
-                      div.appendChild(gerarGraficoAzimute(p.Azimute));
+                      div.insertAdjacentHTML(
+                        "beforeend",
+                        `<div style="margin-top:6px;font-size:12px;color:#444">
+                          Azimute: <b>${p.Azimute}°</b>
+                        </div>`
+                      );
                     }
                     return div;
                   });
 
-                markersCluster.addLayer(marker);
+                // markersCluster.addLayer(marker);
+                itemGroup.addLayer(marker);
+                markersCluster.addLayer(itemGroup);
               
               }
           }
@@ -2053,15 +2568,17 @@
             shadowSize: [41, 41]
           });
 
-            // Adiciona marcador na primeira coordenada
+          // Adiciona marcador na primeira coordenada
+          const recintoGroup = L.layerGroup();
           if(poligonoRecinto.length >0) {  
                 const primeiraCoord = poligonoRecinto[0]; // pega o primeiro ponto
+                /*
                   // Polígono do Recinto
                   L.polyline(poligonoRecinto, {
                     color: infoArea[1].cor,
                     weight: 4,
                     opacity: 0.8
-                  }).addTo(mapInstance)
+                  }).addTo(desenhoLayerGroup)
                     .bindTooltip("<img src='https://cdn-icons-png.flaticon.com/512/15724/15724751.png' width='20' style='vertical-align:middle;margin-right:5px;'/>" +
                                     "<strong style='color:darkred;'>Polígono do Recinto</strong>",
                     {
@@ -2070,40 +2587,88 @@
                       className: "tooltip-transparent"
                     });
                   L.marker(primeiraCoord, { icon: marcadorVermelho })
-                    .addTo(mapInstance)
+                    .addTo(desenhoLayerGroup)
                     .bindPopup(
                       "<strong style='color:darkred;'>Marco 0 do Recinto</strong>",
                       { className: 'popup-transparente' }
                     );
+*/
 
+
+              // Polígono do Recinto
+              const poligonoLayer = L.polyline(poligonoRecinto, {
+                        color: infoArea[1].cor,
+                        weight: 4,
+                        opacity: 0.8
+                      }).bindTooltip(
+                        "<img src='https://cdn-icons-png.flaticon.com/512/15724/15724751.png' width='20' " +
+                        "style='vertical-align:middle;margin-right:5px;'/>" +
+                        "<strong style='color:darkred;'>Polígono do Recinto</strong>",
+                        {
+                          permanent: false,
+                          direction: "center",
+                          className: "tooltip-transparent"
+                        }
+                      );
+
+                      // Marco Zero do Recinto
+                      const marcoZeroMarker = L.marker(primeiraCoord, { icon: marcadorVermelho })
+                        .bindPopup(
+                          "<strong style='color:darkred;'>Marco 0 do Recinto</strong>",
+                          { className: 'popup-transparente' }
+                        );
+
+                      // Adiciona tudo ao grupo
+                      recintoGroup.addLayer(poligonoLayer);
+                      recintoGroup.addLayer(marcoZeroMarker);
+
+                      // 👉 Aqui você decide o destino:
+                      // A) participar do cluster
+                      markersCluster.addLayer(recintoGroup);
 
             }  
 
             areas.forEach(area => {
-              if (area.coords.length >= 1) {
-                
-                const primeiraCoord = area.coords[0]; // pega o primeiro ponto
-                L.polygon(area.coords, {color: area.cor})
-                  .addTo(mapInstance)
+              if (!area.coords || area.coords.length < 1) return;
 
-                  .bindTooltip("<img src='https://cdn-icons-png.flaticon.com/512/15724/15724751.png' width='20' style='vertical-align:middle;margin-right:5px;'/>" +
-                            "<strong style='color:"+area.cor+";'>"+area.titulo+"</strong>",                    
-                  { 
-                                permanent: false, 
-                                direction: "top" , // centralizado
-                                className: "polygon-label" // opcional para estilizar via CSS
-                                            })
-                  
-                  .openTooltip();
+              // Grupo da Área (pai)
+              const areaGroup = L.layerGroup();
 
-                  L.marker(primeiraCoord, { icon: marcadorVermelho })
-                    .addTo(mapInstance)
-                    .bindPopup(
-                      "<strong style='color:"+area.cor+";'>"+area.titulo+"</strong>",
-                      { className: 'popup-transparente' }
-                    );
-              }
-            });                            
+              // Primeira coordenada (referência visual / popup)
+              const primeiraCoord = area.coords[0];
+
+              // Polígono da Área
+              const areaPolygon = L.polygon(area.coords, { color: area.cor })
+                .bindTooltip(
+                  "<img src='https://cdn-icons-png.flaticon.com/512/15724/15724751.png' width='20' " +
+                  "style='vertical-align:middle;margin-right:5px;'/>" +
+                  "<strong style='color:" + area.cor + ";'>" + area.titulo + "</strong>",
+                  {
+                    permanent: false,
+                    direction: "top",
+                    className: "polygon-label"
+                  }
+                );
+                                
+              // Marker de referência da Área
+              const areaMarker = L.marker(primeiraCoord, { icon: marcadorVermelho })
+                .bindPopup(
+                  "<strong style='color:" + area.cor + ";'>" + area.titulo + "</strong>",
+                  { className: 'popup-transparente' }
+                );
+
+              // Adiciona tudo ao grupo
+              areaGroup.addLayer(areaPolygon);
+              areaGroup.addLayer(areaMarker);
+
+              // 👉 Escolha o destino:
+              // A) Participar do cluster
+              markersCluster.addLayer(areaGroup);
+
+              // B) Ficar fora do cluster (alternativa)
+              // mapInstance.addLayer(areaGroup);
+            });
+
 
           //Abre os tabelaGeo de um cluster
           if(markersCluster)
@@ -2132,118 +2697,125 @@
       }
 
 
-function plotarRecintos(tabelaGeo, mapInstance = map) {
-  if (!mapInstance) {
-    console.error('Map não inicializado');
-    return;
-  }
-
-  // --- utils ---------------------------------------------------------
-
-  // Conserta coordenadas no formato "-20.258.360" -> "-20.258360"
-  // Remove todos os pontos exceto o ÚLTIMO
-  const fixCoordDots = (s) => {
-    if (s == null) return null;
-    const t = String(s).trim();
-    if (!t) return null;
-    // mantém apenas o último ponto decimal
-    const cleaned = t.replace(/\.(?=.*\.)/g, '');
-    // permite apenas números, ponto e sinal de menos
-    const sanitized = cleaned.replace(/[^0-9.\-]/g, '');
-    const num = parseFloat(sanitized);
-    return Number.isFinite(num) ? num : null;
-  };
-
-  const normalizeLatLon = (latStr, lonStr) => ({
-    lat: fixCoordDots(latStr),
-    lon: fixCoordDots(lonStr)
-  });
-
-  const normalizeUrl = (u) => {
-    if (!u || typeof u !== 'string') return null;
-    const t = u.trim();
-    if (!t) return null;
-    if (/^https?:\/\//i.test(t)) return t;
-    return 'https://' + t;
-  };
-
-  // --- ícone padrão (caso customIcon não exista) ---------------------
-  const defaultIcon = L.icon({
-    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41]
-  });
-
-  const iconToUse = (typeof customIcon !== 'undefined' && customIcon) ? customIcon : defaultIcon;
-
-  // --- loop dos registros --------------------------------------------
-  const addedMarkers = [];
-
-  for (let ix = 0; ix < (tabelaGeo?.length ?? 0); ix++) {
-    const p = tabelaGeo[ix];
-
-    // plota apenas ativos (boolean true)
-    if (p?.Ativo !== true) continue;
-
-    // normaliza coordenadas
-    const { lat, lon } = normalizeLatLon(p?.Latitude, p?.Longitude);
-    if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
-      // pula registros sem coordenadas válidas
-      continue;
-    }
-
-    const marker = L.marker([lat, lon], { icon: iconToUse })
-      .bindPopup(() => {
-        const div = document.createElement('div');
-
-        const latText = lat.toFixed(6);
-        const lonText = lon.toFixed(6);
-        const url = normalizeUrl(p?.URL);
-        const urlLink = url ? ` ${url}🔗</a>` : '';
-
-        div.innerHTML = `
-          <strong style="color: blue;">${p?.Sigla ?? ''}</strong>
-          <ul style="padding-left: 15px; margin: 8px 0 0 0;">
-            <li>${p?.Tipo ?? ''}</li>
-            <li>Recinto: ${p?.Recinto ?? ''}</li>
-            <li>Codigo: ${p?.Código ?? ''}</li>
-            <li>Latitude: ${latText}</li>
-            <li>Longitude: ${lonText}</li>
-          </ul>
-        `;
-
-        if (p?.Azimute) {
-          try {
-            const graf = gerarGraficoAzimute(p.Azimute);
-            if (graf) div.appendChild(graf);
-          } catch (e) {
-            console.warn('Falha ao gerar gráfico de azimute:', e);
-          }
+      function plotarRecintos(tabelaGeo, mapInstance = map) {
+        if (!mapInstance) {
+          console.error('Map não inicializado');
+          return;
         }
-        return div;
-      });
 
-    marker.addTo(mapInstance);
-    addedMarkers.push(marker);
-  }
+        // --- utils ---------------------------------------------------------
 
-  // --- ajustar bounds para mostrar tudo ------------------------------
-  if (addedMarkers.length > 0) {
-    const bounds = L.latLngBounds(addedMarkers.map(m => m.getLatLng()));
-    if (bounds.isValid()) {
-      mapInstance.fitBounds(bounds, { padding: [30, 30] });
-    }
-  } else {
-    // fallback (ajuste para sua região)
-    const fallback = L.latLngBounds([[-23, -46], [-19, -40]]);
-    mapInstance.fitBounds(fallback);
-    mapInstance.setZoom(6);
-  }
-}
+        // Conserta coordenadas no formato "-20.258.360" -> "-20.258360"
+        // Remove todos os pontos exceto o ÚLTIMO
+        const fixCoordDots = (s) => {
+          if (s == null) return null;
+          const t = String(s).trim();
+          if (!t) return null;
+          // mantém apenas o último ponto decimal
+          const cleaned = t.replace(/\.(?=.*\.)/g, '');
+          // permite apenas números, ponto e sinal de menos
+          const sanitized = cleaned.replace(/[^0-9.\-]/g, '');
+          const num = parseFloat(sanitized);
+          return Number.isFinite(num) ? num : null;
+        };
+
+        const normalizeLatLon = (latStr, lonStr) => ({
+          lat: fixCoordDots(latStr),
+          lon: fixCoordDots(lonStr)
+        });
+
+        const normalizeUrl = (u) => {
+          if (!u || typeof u !== 'string') return null;
+          const t = u.trim();
+          if (!t) return null;
+          if (/^https?:\/\//i.test(t)) return t;
+          return 'https://' + t;
+        };
+
+        // --- ícone padrão (caso customIcon não exista) ---------------------
+        const defaultIcon = L.icon({
+          iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+          iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+          shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+          iconSize: [25, 41],
+          iconAnchor: [12, 41],
+          popupAnchor: [1, -34],
+          shadowSize: [41, 41]
+        });
+
+        const iconToUse = (typeof customIcon !== 'undefined' && customIcon) ? customIcon : defaultIcon;
+
+        // --- loop dos registros --------------------------------------------
+        const addedMarkers = [];
+
+        for (let ix = 0; ix < (tabelaGeo?.length ?? 0); ix++) {
+          const p = tabelaGeo[ix];
+
+          // plota apenas ativos (boolean true)
+          if (p?.Ativo !== true) continue;
+
+          // normaliza coordenadas
+          const { lat, lon } = normalizeLatLon(p?.Latitude, p?.Longitude);
+          if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+            // pula registros sem coordenadas válidas
+            continue;
+          }
+
+          const marker = L.marker([lat, lon], { icon: iconToUse })
+            .bindPopup(() => {
+              const div = document.createElement('div');
+
+              const latText = lat.toFixed(6);
+              const lonText = lon.toFixed(6);
+              const url = normalizeUrl(p?.URL);
+              const urlLink = url ? ` ${url}🔗</a>` : '';
+
+              div.innerHTML = `
+                <strong style="color: blue;">${p?.Sigla ?? ''}</strong>
+                <ul style="padding-left: 15px; margin: 8px 0 0 0;">
+                  <li>${p?.Tipo ?? ''}</li>
+                  <li>Recinto: ${p?.Recinto ?? ''}</li>
+                  <li>Codigo: ${p?.Código ?? ''}</li>
+                  <li>Latitude: ${latText}</li>
+                  <li>Longitude: ${lonText}</li>
+                </ul>
+              `;
+
+/*
+              if (p?.Azimute) {
+                try {
+    
+
+                  // cria novo
+               //   const graf = gerarGraficoAzimute(p.Azimute);
+              //    graf.setAttribute('data-azimute-grafico', 'true');
+                  div.appendChild(graf);
+                } catch(e) {
+                  console.warn('Erro ao gerar gráfico de azimute:', e);
+                }
+              }
+              */
+              return div;
+
+            });
+
+          marker.addTo(mapInstance);
+          addedMarkers.push(marker);
+        }
+
+        // --- ajustar bounds para mostrar tudo ------------------------------
+        if (addedMarkers.length > 0) {
+          const bounds = L.latLngBounds(addedMarkers.map(m => m.getLatLng()));
+          if (bounds.isValid()) {
+            mapInstance.fitBounds(bounds, { padding: [30, 30] });
+          }
+        } else {
+          // fallback (ajuste para sua região)
+          const fallback = L.latLngBounds([[-23, -46], [-19, -40]]);
+          mapInstance.fitBounds(fallback);
+          mapInstance.setZoom(6);
+        }
+      }
 
 
 </script> 
