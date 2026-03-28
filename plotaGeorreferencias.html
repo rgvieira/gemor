@@ -3,7 +3,8 @@
 <head>
     <!-- Codificação e responsividade -->
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <!-- SEO -->
     <title>Mapa de Recinto Alfandegado</title>
     <meta name="description" content="Espaço visual para plotagem de áreas/equipamentos de recintos alfandegados, conforme Georreferenciamento informados via API Recintos, pelos próprios recintos.">
@@ -124,143 +125,106 @@
       PAINEL LATERAL  height: 900px,
     =============================== */
   /* ===== Painel base (desktop) ===== */
-  /* Painel base (desktop) */
+/* Estilo base para Desktop (tabela normal) */
+/* ===============================
+   PAINEL E TABELA (MOBILE-FIRST)
+   =============================== */
+
+/* O Painel que flutua sobre o mapa */
 .painel-tabela {
   position: absolute;
-
-  top: 30px;              /* sobe o painel */
+  top: 10px;
   right: 10px;
-  width: 70vw;            /* ~70% da largura da viewport */
-  height: 80vh !important;/* ~80% da altura da viewport */
-  min-width: 900px;       /* mantém salvaguarda de largura mínima */
-
+  width: calc(100vw - 20px); /* Ocupa quase tudo no iPhone */
+  max-width: 450px;           /* No Desktop, trava em 450px */
+  height: 75vh !important;   /* Evita tapar o mapa todo */
   background: #fff;
   border: 1px solid #ccc;
   border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
-  overflow: hidden;             /* o wrapper interno rola */
+  box-shadow: -2px 8px 24px rgba(0,0,0,0.2);
   z-index: 9999;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  font-size: 13px;              /* desktop base */
-  color: #111827;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-sizing: border-box; /* CRÍTICO: evita que padding estoure a largura */
 }
 
-/* O conteúdo rolável fica aqui */
+/* Container de scroll interno */
 .painel-tabela .table-wrapper {
-  height: calc(100% - 44px);    /* deixa espaço pro botão fechar/topo */
-  overflow: auto;
-  -webkit-overflow-scrolling: touch; /* iOS */
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden; /* Proíbe scroll horizontal */
   padding: 8px;
+  -webkit-overflow-scrolling: touch;
 }
 
-/* Ações (topo/rodapé) geradas pelo HTML da tabela */
+/* A Tabela Rigorosa */
+#containerTabelaGeo {
+  width: 100% !important;
+  table-layout: fixed; /* Força as colunas a respeitarem os pixels */
+  border-collapse: collapse;
+  font-family: sans-serif;
+}
+
+#containerTabelaGeo th, 
+#containerTabelaGeo td {
+  border: 1px solid #e5e7eb;
+  padding: 6px 4px;
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis; /* Corta o texto com ... se não couber */
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+/* Definição de Larguras para iPhones (Somam 100%) */
+.col-tipo { width: 65px; }      
+.col-equip { width: auto; }     /* O que sobrar vai para o nome */
+.col-plotar { width: 42px; }    
+
+/* Botões de Ação (Acessíveis para Touch) */
 .tabela-actions {
   display: flex;
-  gap: 8px;
-  align-items: center;
-  justify-content: flex-start;
+  gap: 6px;
+  padding: 8px;
+  justify-content: flex-end;
+  background: #f8f9fa;
+  border-bottom: 1px solid #eee;
 }
 
-/* Botão genérico usado na tabela */
-.btn-acao.btn-fechar {
-  width: 28px;
-  height: 28px;
-  padding: 0;
+.btn-acao-mini {
+  width: 36px; height: 36px; /* Tamanho ideal para dedo no iPhone SE */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid #d1d5db;
   background: #fff;
   border-radius: 6px;
   cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-.btn-acao.btn-fechar img {
-  display: block;
-  width: 16px;
-  height: 16px;
 }
 
-/* Tabela */
-#containerTabelaGeo {
-  border-collapse: collapse;
-  width: 100%;
-  table-layout: fixed;          /* evita estourar no mobile */
-}
-#containerTabelaGeo thead th {
-  position: sticky; top: 0; z-index: 1;
-  background: #1e3a8a;
-  color: #fff;
-  border: 1px solid #333;
-  padding: 8px;
-  text-align: left;
-  font-weight: 700;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-#containerTabelaGeo td {
-  border: 1px solid #e5e7eb;
-  padding: 6px;
-  font-size: 12px;
-  line-height: 1.35;
-  vertical-align: top;
-  word-break: break-word;
-}
-#containerTabelaGeo button.btn-acao.btn-fechar {
-  width: 26px;
-  height: 26px;
-  border-radius: 6px;
-  font-size: 14px;
-}
+/* ===============================
+   AJUSTES ESPECÍFICOS (BREAKPOINTS)
+   =============================== */
 
-/* Responsivo: mobile */
-@media (max-width: 768px) {
-  .painel-tabela {
-    top: 8px;
-    right: 8px;
-    width: calc(100vw - 20px);  /* quase toda a largura */
-    max-width: 520px;
-    height: 60vh;               /* altura relativa */
-    font-size: 12px;            /* fonte menor */
-  }
-  .painel-tabela .table-wrapper {
-    height: calc(100% - 44px);
-    padding: 6px;
-  }
-  #containerTabelaGeo thead th {
-    padding: 6px;
-    font-size: 12px;
-  }
+/* iPhones pequenos (320px - 375px) */
+@media screen and (max-width: 380px) {
   #containerTabelaGeo td {
-    padding: 5px;
-    font-size: 11.5px;
-    line-height: 1.3;
+    font-size: 10px;
+    padding: 4px 2px;
   }
-  .btn-acao.btn-fechar {
-    width: 26px; height: 26px;
-  }
-  .btn-acao.btn-fechar img {
-    width: 14px; height: 14px;
-  }
-  .tabela-actions {
-    gap: 6px;
-  }
+  .col-tipo { width: 50px; }
+  .col-plotar { width: 36px; }
 }
 
-/* Mini devices: ainda mais compacto */
-@media (max-width: 360px) {
+/* Desktop/Telas Grandes */
+@media screen and (min-width: 1024px) {
   .painel-tabela {
-    width: calc(100vw - 16px);
-    height: 58vh;
-    font-size: 11.5px;
-  }
-  #containerTabelaGeo thead th,
-  #containerTabelaGeo td {
-    font-size: 11px;
-    padding: 4px;
+    width: 450px; /* Largura fixa e elegante à direita */
+    right: 20px;
+    top: 20px;
   }
 }
-
   /* ===============================
     BOTÕES
   =============================== */
@@ -728,18 +692,35 @@
 }
 
 /* Tabela/ícones (se ainda não tiver) */
-.help-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-.help-table tr + tr {
-  border-top: 1px dashed rgba(0,0,0,0.08);
-}
+/* Célula que contém o ícone na ajuda */
 .help-icon-cell {
-  width: 40px;
+  width: 44px;
+  height: 44px;
   text-align: center;
   vertical-align: middle;
-  padding: 8px 6px;
+  background-color: #1e3a8a; /* O azul escuro do seu projeto */
+  border-radius: 6px;        /* Arredonda para parecer um botão */
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Força os ícones (SVG ou Imagem) a ficarem brancos */
+.help-icon-cell svg, 
+.help-icon-cell img,
+.help-icon-cell i {
+  width: 20px;
+  height: 20px;
+  filter: brightness(0) invert(1); /* Truque CSS: transforma qualquer cor em Branco */
+  fill: #FFFFFF !important;
+  color: #FFFFFF !important;
+}
+
+/* Ajuste na tabela de ajuda para não grudar */
+.help-table td {
+  padding: 10px 8px;
+  border-bottom: 1px solid #eee;
 }
 .help-name { color: #222; }
 .help-desc { color: #555; font-size: 0.95rem; }
@@ -798,6 +779,20 @@
     z-index: 2000;
     filter: drop-shadow(0 0 2px rgba(255, 69, 0, 0.5));
     animation: apontarSeta 0.8s ease-in-out infinite; /* Um pouco mais rápida para chamar atenção */
+  }
+
+  /* Estilo para prompt de upload vazio */
+  #upload-prompt-vazio div {
+    transform: scale(0.9);
+    opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+  #upload-prompt-vazio button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(33,150,243,0.5);
+  }
+  #upload-prompt-vazio button:active {
+    transform: translateY(0);
   }
 
   </style>
@@ -1108,11 +1103,11 @@
     const ICONS = window.RFB_ICONS || {};
 
     const botoesInfo = [
-      { icon: ICONS.help || '', nome: 'Help',                          desc: 'Tenha o arquivo .csv de georreferenciamento baixado em seu equipamento; faça Upload de CSV; aproxime as imagens via Zoom (+/-); clique sobre cada imagem protada para mais informações a respeito.' },      
+      { icon: ICONS.help || '', nome: 'Help',                          desc: 'NecessárioTenha o arquivo .csv de georreferenciamento baixado em seu equipamento; faça Upload de CSV; aproxime as imagens via Zoom (+/-); clique sobre cada imagem protada para mais informações a respeito.' },      
       { icon: ICONS.tablePlot    || '',  nome: 'Georreferenciamento', desc: 'Os dados são enviados por recintos alfandegados ao banco de dados Recintos. Sofrem modificações, portante, relevante observar a necessidade de obtenção periódica de novo arquivo .csv.' },      
       { icon: ICONS.clear || '', nome: 'Limpar Mapa',                  desc: 'Limpa o mapa, excluindo os objetos plotados.' },
       { icon: ICONS.coords    || '', nome: 'Coordenadas do Ponto',     desc: 'Apresenta as coordenadas do ponto escolhido no mapa. A precisão não é absoluta.' },
-      { icon: ICONS.cursor    || '',  nome: 'Ponteiro do Mouse',       desc: 'Lista de ponteiros do mouse. Relevante para desktop.' },
+//      { icon: ICONS.cursor    || '',  nome: 'Ponteiro do Mouse',       desc: 'Lista de ponteiros do mouse. Relevante para desktop.' },
       { icon: ICONS.layers    || '',  nome: 'Selecionar Tipo de Mapa', desc: 'Selecionar tipo de mapa, como referência.' },
       { icon: ICONS.upload    || '',  nome: 'Upload de CSV', desc: 'Upload do arquivo .csv e plota as áreas/equipamentos.' },
       { icon: ICONS.filter    || '',  nome: 'Filtrar por Tipo', desc: 'Tabela de Tipos de Área/Equipamentos, fazendo plotagem, conforme escolha.' },
@@ -1186,6 +1181,98 @@
    
     carregarDadosIniciais(); 
 
+    // Verifica se localStorage está vazio para tabelaGeo e mostra prompt
+    function mostrarPromptUploadVazio() {
+      if (isDataInStorage()) return; // já tem dados
+
+      // Remove se já existir
+      let prompt = document.getElementById('upload-prompt-vazio');
+      if (prompt) prompt.remove();
+
+      // Cria overlay
+      prompt = document.createElement('div');
+      prompt.id = 'upload-prompt-vazio';
+      prompt.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5); z-index: 5000;
+        display: flex; align-items: center; justify-content: center;
+      `;
+      prompt.innerHTML = `
+        <div style="
+          background: white; padding: 40px 30px; border-radius: 12px; max-width: 420px;
+          box-shadow: 0 20px 60px rgba(0,0,0,0.3); font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+          display: flex; flex-direction: column; align-items: center; text-align: center;
+        ">
+          <h3 style="color: #1e3a8a; margin: 0 0 20px 0; font-size: 22px; font-weight: 700;">
+            📋 Faça upload do arquivo CSV
+          </h3>
+          <p style="color: #666; margin: 0 0 30px 0; line-height: 1.6; max-width: 320px;">
+            Não há dados de georreferenciamento no localStorage.<br>
+            <strong>Carregue o arquivo CSV para visualizar as áreas/equipamentos no mapa.</strong>
+          </p>
+          <button id="btn-upload-vazio" class="btn-acao" style="
+            background: linear-gradient(180deg, #2196F3, #1565C0); border: 1px solid #0D47A1;
+            color: white; padding: 12px 28px; border-radius: 6px; font-size: 16px; font-weight: 600;
+            cursor: pointer; box-shadow: 0 4px #0D47A1; margin: 0; width: auto; min-width: 180px;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            transition: all 0.2s ease;
+          " onclick="dispararBtnUploadControlVazio(); this.blur();">
+            ${window.RFB_ICONS ? window.RFB_ICONS.upload : '📁'} Upload CSV
+          </button>
+          <p style="margin-top: 24px; font-size: 13px; color: #888; line-height: 1.4;">
+            Após o upload, os dados serão processados automaticamente.
+          </p>
+        </div>
+      `;
+      document.body.appendChild(prompt);
+
+      // Animação entrada
+      setTimeout(() => {
+        const box = prompt.querySelector('div');
+        box.style.transform = 'scale(1)';
+        box.style.opacity = '1';
+      }, 10);
+    }
+
+    // Função para disparar btnUploadControl ou fallback
+    function dispararBtnUploadControlVazio() {
+      // Tenta usar o controle Leaflet primeiro (se existir)
+      if (window.__btnUploadControl?.enable) {
+        window.__btnUploadControl.enable();
+        // Encontra o input do controle e clica
+        const inputControl = document.querySelector('.leaflet-control-custom input[type="file"]');
+        if (inputControl) {
+          inputControl.click();
+          return;
+        }
+      }
+      // Fallback: input estático
+      const inputStatic = document.getElementById('inputUploadCSV');
+      if (inputStatic) inputStatic.click();
+    }
+
+    // Listener global para esconder prompt após upload bem-sucedido
+    window.addEventListener('upload-sucesso', () => {
+      const prompt = document.getElementById('upload-prompt-vazio');
+      if (prompt) {
+        prompt.style.opacity = '0';
+        setTimeout(() => prompt.remove(), 300);
+      }
+    });
+
+    // Modifica o handler de upload existente para dispatch evento
+    const originalChangeHandler = (e) => {
+      // Sua lógica original de upload aqui (será preservada)
+      // Após sucesso, dispatch evento
+      setTimeout(() => {
+        if (isDataInStorage()) {
+          window.dispatchEvent(new CustomEvent('upload-sucesso'));
+        }
+      }, 1000);
+    };
+
+    mostrarPromptUploadVazio(); // Chama imediatamente após carregar dados
+
       // 1. Validamos se o que existe é REALMENTE um mapa do Leaflet
       // Se window.map existe mas não tem o método 'setView', ele é lixo.
       if (window.map && !(window.map instanceof L.Map)) {
@@ -1232,106 +1319,6 @@
 
 
 
-
-/*
-    function csvJson(csvTexto) {
-    if (!csvTexto || typeof csvTexto !== 'string') return [];
-
-    const dados = [];
-    let cabecalho = [];
-    let campoAtual = "";
-    let dentroDeAspas = false;
-    let linhaAtual = [];
-
-    // 1. Parser para separar as colunas por ";"
-    for (let i = 0; i < csvTexto.length; i++) {
-        const char = csvTexto[i];
-        const proxChar = csvTexto[i + 1];
-
-        if (char === '"') {
-            if (dentroDeAspas && proxChar === '"') {
-                campoAtual += '"'; i++; 
-            } else {
-                dentroDeAspas = !dentroDeAspas;
-            }
-        } else if (char === ';' && !dentroDeAspas) {
-            linhaAtual.push(campoAtual);
-            campoAtual = "";
-        } else if ((char === '\n' || char === '\r') && !dentroDeAspas) {
-            if (char === '\r' && proxChar === '\n') i++; 
-            linhaAtual.push(campoAtual);
-            if (linhaAtual.length > 0) {
-                if (cabecalho.length === 0) {
-                    cabecalho = linhaAtual.map(c => c.trim().replace(/^"|"$/g, ''));
-                } else {
-                    dados.push(processarLinha(linhaAtual, cabecalho));
-                }
-            }
-            linhaAtual = []; campoAtual = "";
-        } else {
-            campoAtual += char;
-        }
-    }
-
-    if (campoAtual || linhaAtual.length > 0) {
-        linhaAtual.push(campoAtual);
-        if (cabecalho.length > 0) dados.push(processarLinha(linhaAtual, cabecalho));
-    }
-
-function processarLinha(valores, cols) {
-    const objeto = Object.create(null);
-
-    cols.forEach((col, i) => {
-        let nomeCol = String(col).trim();
-        let valRaw = valores[i] || "";
-        
-        // 1. Limpeza agressiva de strings
-        let s = String(valRaw).trim();
-
-        // 2. Remove especificamente as cascas ;" e "; ou apenas "
-        // Remove ;" do início
-        if (s.startsWith(';"')) s = s.substring(2);
-        else if (s.startsWith('"')) s = s.substring(1);
-
-        // Remove "; do fim
-        if (s.endsWith('";')) s = s.substring(0, s.length - 2);
-        else if (s.endsWith('"')) s = s.substring(0, s.length - 1);
-
-        // 3. Tratamento específico para Usuário e Senha
-        if (nomeCol === "Senha" || nomeCol === "Usuário") {
-            // Se o campo estiver vazio aqui, é porque o Parser lá no topo 
-            // cortou o CSV no lugar errado. 
-            
-            objeto[nomeCol] = s.replace(/\\n/g, '\n') // Transforma \n literal em quebra
-                               .split(/\r?\n/)        // Quebra as linhas reais
-                               .map(linha => linha.trim())
-                               .filter(Boolean)
-                               .join('; ');           // Une com ;
-        } else if (nomeCol === "Ativo") {
-            objeto[nomeCol] = s.toLowerCase().includes("true");
-        } else {
-            objeto[nomeCol] = s;
-        }
-    });
-
-    // VERIFICAÇÃO FINAL: Se a senha sumiu, mas existe valor no array de valores, 
-    // forçamos a recuperação do último campo disponível.
-    if (!objeto["Senha"] && valores.length >= cols.length) {
-        let provavelSenha = valores[cols.indexOf("Senha")] || "";
-        objeto["Senha"] = provavelSenha.replace(/^[;" ]+|[;" ]+$/g, '').replace(/\n/g, '; ');
-    }
-
-    return objeto;
-}
-    // Ordenação por Código
-    const kCod = cabecalho.find(k => k.toLowerCase().includes("codigo"));
-    if (kCod) {
-        dados.sort((a, b) => (parseInt(a[kCod]) || 0) - (parseInt(b[kCod]) || 0));
-    }
-
-    return dados;
-}
-*/
       /**
      * Gera o texto do título (tooltip/label) para o mapa.
      * Ex.: "DAWLOG - 7951102"
@@ -1382,156 +1369,129 @@ function processarLinha(valores, cols) {
         }
     }
           
-      function gerarTabelaHTML(tabela) {
-        if (!tabela || !Array.isArray(tabela) || tabela.length === 0 || tabela[0].Tipo === '') {
-          return "";
-        }
+function gerarTabelaHTML(tabela) {
+  if (!tabela || !Array.isArray(tabela) || tabela.length === 0) return "";
 
-        // Escape básico
-        const esc = (s) =>
-          String(s ?? "")
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#39;");
+  const esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 
-        // CSS mínimo local só para garantir legibilidade
-        const cssMin = `
-          <style>
-            #containerTabelaGeo { border-collapse: collapse; width: 100%; table-layout: fixed; }
-            #containerTabelaGeo th, #containerTabelaGeo td {
-              border: 1px solid #e5e7eb; padding: 6px; font-size: 12px; line-height: 1.35; vertical-align: top;
-            }
-            #containerTabelaGeo thead th {
-              background: #1e3a8a; color: #fff; border: 1px solid #333; padding: 8px; font-weight: 700;
-              white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            }
-            .cell-ellipsis { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-            .cell-right { text-align: right; }
-            .cell-center { text-align: center; }
-            .btn-acao.btn-fechar { width: 26px; height: 26px; border: 1px solid #d1d5db; background:#fff; border-radius: 6px; cursor: pointer; }
-            @media (max-width: 768px) {
-              #containerTabelaGeo th, #containerTabelaGeo td { padding: 5px; font-size: 11.5px; }
-              #containerTabelaGeo col:nth-child(1) { width: 28% !important; } /* Tipo */
-              #containerTabelaGeo col:nth-child(2) { width: 34% !important; } /* Equipamento */
-              #containerTabelaGeo col:nth-child(3) { width: 9%  !important; } /* Azimute */
-              #containerTabelaGeo col:nth-child(4) { width: 12% !important; } /* Latitude */
-              #containerTabelaGeo col:nth-child(5) { width: 12% !important; } /* Longitude */
-              #containerTabelaGeo col:nth-child(6) { width: 5%  !important; } /* Plotar */
-            }
-          </style>
-        `;
+  const cssMin = `
+<style>
+  /* Wrapper para garantir o alinhamento à direita */
+  .tabela-wrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end; /* Alinha todo o conteúdo (botões + tabela) à direita */
+  }
 
-        let html = `
-          ${cssMin}
-          <!-- Ações topo (mantidas) -->
-<div class="tabela-actions" style="margin-top:8px;">
-  <button type="button" onclick="criarLinha()" class="btn-acao btn-fechar" title="Nova linha">
-    <img src="https://cdn-icons-png.flaticon.com/512/1665/1665680.png" style="width:12px;height:12px;">
-  </button>
-  <button type="button" onclick="baixarCSV()" class="btn-acao btn-fechar" title="Salvar CSV">
-    <img src="https://cdn-icons-png.flaticon.com/512/12809/12809885.png" style="width:12px;height:12px;">
-  </button>
-  <button type="button" onclick="fecharPainel()" class="btn-acao btn-fechar" title="Fechar">
-    <img src="https://cdn-icons-png.flaticon.com/128/4034/4034637.png" style="width:12px;height:12px;">
-  </button>
-</div>
+  #containerTabelaGeo {
+    border-collapse: collapse;
+    width: 100%;           
+    max-width: 450px;      /* Frame maior reduzido e fixado */
+    table-layout: fixed;   
+    margin: 5px 0;
+    font-family: sans-serif;
+    font-size: 11px;
+    background: #fff;
+    box-shadow: -2px 2px 10px rgba(0,0,0,0.1); /* Sombra leve à esquerda para destacar */
+  }
 
-          <table id="containerTabelaGeo" class="tabela-geo">
-            <colgroup>
-              <col style="width: 30%;">  <!-- Tipo -->
-              <col style="width: 60%;">  <!-- Equipamento -->
-              <col style="width: 10%;">   <!-- Plotar -->
-            </colgroup>
-            <thead>
-              <tr>
-                <th>Tipo</th>
-                <th>Equipamento</th>
-        
-                <th>Plotar</th>
-              </tr>
-            </thead>
-            <tbody>
-        `;
+  #containerTabelaGeo th, #containerTabelaGeo td {
+    border: 1px solid #e5e7eb;
+    padding: 4px 5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: middle;
+  }
 
-        tabela.forEach((p, idx) => {
-          const tipo = p?.Tipo ?? "";
-          const equipamentoCompleto = p?.Equipamento ?? "";
-          
+  #containerTabelaGeo thead th {
+    background: #1e3a8a;
+    color: #fff;
+    font-size: 10px;
+    text-align: left;
+  }
 
-          // otimiza equipamento removendo repetição do tipo
-          const eqCurto = (() => {
-            if (!tipo) return equipamentoCompleto;
-            const re = new RegExp(tipo.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
-            const r = equipamentoCompleto.replace(re, "").trim();
-            if (r) return r;
-            return equipamentoCompleto.length > 24 ? equipamentoCompleto.slice(0, 24) + "…" : equipamentoCompleto;
-          })();
+  /* Colunas Internas Compactas */
+  .col-tipo { width: 60px; } 
+  .col-plotar { width: 38px; text-align: center; }
+  /* Equipamento é automático e ocupa o resto dos 450px */
 
-          // valores visíveis
-          const azStr  = (p?.Azimute ?? "") + "";
-          const latStr = p?.Latitude  ?? "";
-          const lonStr = p?.Longitude ?? "";
-          const latShort = String(latStr).slice(0, 12);
-          const lonShort = String(lonStr).slice(0, 12);
+  .tabela-actions {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 4px;
+    justify-content: flex-end; /* Botões de ação também à direita */
+  }
 
-          // valores numéricos para o onclick (sem aspas!)
-          const latNum = parseFloat(String(latStr).replace(",", "."));
-          const lonNum = parseFloat(String(lonStr).replace(",", "."));
-          const azNum  = parseFloat(String(azStr).replace(",", ".")) || 0;
+  .btn-acao-mini {
+    width: 30px; height: 30px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1px solid #ccc; background: #fff; border-radius: 4px;
+    cursor: pointer; font-size: 14px;
+  }
 
-          html += `
-            <tr data-index="${idx}">
-              <td class="cell-ellipsis" title="${esc(tipo)}">${esc(tipo)}</td>
+  /* Em celulares Xiaomi/Samsung/iPhone pequenos, ocupa a largura toda */
+  @media (max-width: 480px) {
+    #containerTabelaGeo { 
+      max-width: 100%; 
+      font-size: 10px;
+    }
+    .col-tipo { width: 50px; }
+  }
+</style>`;
 
-              <td class="cell-ellipsis"
-                  onclick="mostrarEquipamento(this, '${esc(equipamentoCompleto)}', '${esc(tipo)}')"
-                  style="cursor:pointer;"
-                  title="${esc(equipamentoCompleto)}">
-                ${esc(eqCurto)}
-              </td>
+//      ${cssMin}
+  let html = `
+    <div class="tabela-wrapper">
 
-      
+      <table id="containerTabelaGeo">
+        <thead>
+          <tr>
+            <th class="col-tipo">Tipo</th>
+            <th>Equipamento</th>
+            <th class="col-plotar"></th>
+          </tr>
+        </thead>
+        <tbody>`;
 
-              <td class="cell-center">
+  tabela.forEach((p, idx) => {
+    const tipo = p?.Tipo ?? "";
+    const eqCompleto = p?.Equipamento ?? "";
+    
+    // Encurta o nome removendo o Tipo repetido
+    let eqCurto = eqCompleto;
+    if (tipo) {
+      const re = new RegExp(tipo.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
+      eqCurto = eqCompleto.replace(re, "").trim() || eqCompleto;
+    }
 
-            <button
-              type="button"
-              class="btn-acao btn-fechar"
-              title="Plotar no mapa"
-              onclick="plotarNoMapa(${Number.isFinite(latNum)?latNum:0}, ${Number.isFinite(lonNum)?lonNum:0}, '${esc(tipo)}', '${esc(equipamentoCompleto)}', ${azNum}, ${idx})">
-              📍
-            </button>
+    const latNum = parseFloat(String(p?.Latitude ?? "0").replace(",", "."));
+    const lonNum = parseFloat(String(p?.Longitude ?? "0").replace(",", "."));
 
-              </td>
-            </tr>
-          `;
-        });
+    html += `
+      <tr>
+        <td title="${esc(tipo)}">${esc(tipo)}</td>
+        <td title="${esc(eqCompleto)}" style="color: #1e40af; font-weight: 500; cursor: pointer;" 
+            onclick="mostrarEquipamento(this, '${esc(eqCompleto)}')">
+          ${esc(eqCurto)}
+        </td>
+        <td class="col-plotar">
+          <button type="button" class="btn-acao-mini" style="width:24px; height:24px; font-size:12px;"
+                  onclick="plotarNoMapa(${latNum}, ${lonNum}, '${esc(tipo)}', '${esc(eqCompleto)}', 0, ${idx})">
+            📍
+          </button>
+        </td>
+      </tr>`;
+  });
 
-        html += `
-            </tbody>
-          </table>
+  html += `
+        </tbody>
+      </table>
+    </div>`;
 
-          <!-- Ações rodapé (mantidas) -->
-          <div class="tabela-actions" style="margin-top:8px;">
-            <button onclick="criarLinha()" class="btn-acao btn-fechar" title="Nova linha">
-              https://cdn-icons-png.flaticon.com/512/1665/1665680.png
-            </button>            
-            <button onclick="baixarCSV()" class="btn-acao btn-fechar" title="Salvar CSV">
-              https://cdn-icons-png.flaticon.com/512/12809/12809885.png
-            </button>
-            <button onclick="fecharPainel()" class="btn-acao btn-fechar" title="Fechar">
-              https://cdn-icons-png.flaticon.com/128/4034/4034637.png
-            </button>           
-          </div>
-        `;
-
-        return html;
-      }
-
-
-
+  return html;
+}
 
 
 function mostrarProtocolo(td, valorCompleto) {
@@ -2179,10 +2139,6 @@ function fecharPainel() {
         `;
       }
 
-
-
-
-
       function svgCameraModerna() {
         return `
           <svg width="44" height="40" viewBox="0 0 44 40">
@@ -2204,10 +2160,6 @@ function fecharPainel() {
       }
 
 
-
-
-
-
   /*
 Tipo passado	SVG
 fixa	svgCameraFixa
@@ -2216,11 +2168,7 @@ moderna	svgCameraModerna
 bullet	svgCameraBullet
 */
 
-
-
-      
-      //////////////////////////////
- 
+     
       function parseAzimute(raw) {
         // transforma em string, remove espaços, troca vírgula por ponto, remove "°"
         const s = String(raw ?? "").trim().replace("°", "").replace(",", ".");
@@ -2612,8 +2560,6 @@ function plotarConeAzimuteComCamera(
         }
       }
       
-
-
 
 
       function clearCluster(mapInstance, cluster) {
@@ -3447,120 +3393,8 @@ function plotarConeAzimuteComCamera(
             return container;
           }
         });
-          
-        
+                  
            window.map.addControl(new btnCoordsContr());
-        
-   
-
-
-
-          // --- Controle de Cursores Leaflet ---
-          var btnCursorControl = L.Control.extend({
-            options: { position: window.posicaoBotao }, // Aplica a posição aqui
-
-            onAdd: function (mapInstance) {
-              // ✅ manter referência do mapa acessível nos handlers
-              const mapRef = mapInstance;
-
-              // Container do controle (UM botão só)
-              const container = L.DomUtil.create("div", "leaflet-bar leaflet-control leaflet-control-custom");
-              skinLeafletButton(container, { width: 22, height: 30, fontSize: 18, lineHeight: 27 });
-
-              // Ícone no próprio container (FA conforme seu original)
-              container.innerHTML = window.RFB_ICONS.cursor; //'<i class="fa fa-mouse-pointer" style="color:darkblue;"></i>';
-
-              // Aparência idêntica ao btnCoordsContr
-              container.style.backgroundColor = "white";
-              container.style.cursor = "pointer";
-              container.style.textAlign = "center";
-              container.style.position = "relative"; // base para o dropdown
-              container.title = 'Ponteiro do Mouse'
-
-              // Evita propagação para o mapa
-              L.DomEvent.disableClickPropagation(container);
-              L.DomEvent.disableScrollPropagation(container);
-
-              // Menu de opções (HORIZONTAL)
-              const optionsDiv = L.DomUtil.create("div", "cursor-options", container);
-              optionsDiv.style.display = "none";
-              optionsDiv.style.position = "absolute";
-              optionsDiv.style.top = "30px";    // logo abaixo do botão
-              optionsDiv.style.right = "40px";  // (mantido) alinhado à direita do botão
-              optionsDiv.style.backgroundColor = "white";
-              optionsDiv.style.border = "1px solid #ccc";
-              optionsDiv.style.zIndex = "1000";
-              optionsDiv.style.boxShadow = "0 1px 3px rgba(0,0,0,0.2)";
-              optionsDiv.style.flexDirection = "row";   // horizontal
-              optionsDiv.style.alignItems = "stretch";
-              optionsDiv.style.whiteSpace = "nowrap";
-              optionsDiv.style.padding = "0";
-
-              // Opções de cursor — (mantidas) 4 opções originais
-              const cursors = [
-                ['fa fa-hand-paper',              'grab',      'Navegação (Mão Aberta)'],
-                ['fa fa-hand-pointer',            'pointer',   'Seleção (Mão com Dedo)'],
-                ['fa fa-crosshairs',              'crosshair', 'Precisão/Desenho (Mira)'],
-                ['fa fa-arrow-up-right-from-square', 'default','Padrão Sistema']
-              ];
-
-              cursors.forEach(function (c, idx) {
-                const optBtn = L.DomUtil.create("div", "cursor-btn", optionsDiv);
-                optBtn.innerHTML = `<i class="${c[0]}"></i>`;
-                optBtn.title = c[2];
-
-                // Estilo dos itens na horizontal (mantido)
-                optBtn.style.display = "inline-flex";
-                optBtn.style.alignItems = "center";
-                optBtn.style.gap = "8px";
-                optBtn.style.padding = "6px 10px";
-                optBtn.style.cursor = "pointer";
-                optBtn.style.userSelect = "none";
-                optBtn.style.background = "white";
-
-                // Divisor vertical entre itens (mantido)
-                /*
-                if (idx < cursors.length - 1) {
-                  optBtn.style.borderRight = "1px solid #e0e0e0";
-                }
-                */
-
-                optBtn.onmouseenter = function () {
-                  optBtn.style.background = "#f2f2f2";
-                };
-                optBtn.onmouseleave = function () {
-                  optBtn.style.background = "white";
-                };
-
-                // ✅ correção: usar mapRef (não 'map') e manter o resto igual
-                optBtn.onclick = function (e) {
-                  e.stopPropagation();
-                  if (mapRef && typeof mapRef.getContainer === "function") {
-                    mapRef.getContainer().style.cursor = c[1];
-                  }
-                  optionsDiv.style.display = "none";
-                };
-              });
-
-              // Toggle do dropdown no PRÓPRIO container (UM botão)
-              L.DomEvent.on(container, "click", function (e) {
-                L.DomEvent.stop(e);
-                optionsDiv.style.display === "flex" ? "none" : "flex"; // ✅ abre como flex p/ 4 itens aparecerem
-              });
-
-              // Fecha ao clicar fora
-              document.addEventListener("click", function onDocClick(ev) {
-                if (!container.contains(ev.target)) optionsDiv.style.display = "none";
-              });
-
-              return container;
-            }
-          });
-
-          window.map.addControl(new btnCursorControl());
-                    
-
-
 
             //Popup seletor de tipo de mapa. Aparece no canto superior direito
             const btnMapSeletor = L.Control.extend({
@@ -3743,6 +3577,13 @@ function plotarConeAzimuteComCamera(
                     }
 
                     event.target.value = ""; // permite re-selecionar depois
+                    
+                    // Fecha prompt imediatamente após carregamento
+                    const prompt = document.getElementById('upload-prompt-vazio');
+                    if (prompt) {
+                      prompt.style.opacity = '0';
+                      setTimeout(() => prompt.remove(), 300);
+                    }
                     // disableUpload();        // use se quiser travar após o upload
                   };
                   reader.onerror = (e) => {
@@ -3944,8 +3785,6 @@ function plotarConeAzimuteComCamera(
 
             window. map.addControl(new btnTipoSeletor());
 
-
-            //////////////////////////////////////////////////////////////
           // Controle Leaflet para abrir/fechar painel
 
           L.Control.Excel = L.Control.extend({
@@ -3959,19 +3798,7 @@ function plotarConeAzimuteComCamera(
 
                 // SVG exemplo (alvo/localizador). Ajuste 'stroke' e dimensões se quiser.
                 btn.innerHTML = window.RFB_ICONS.tablePlot;
-                /*
-                `
-                  <svg viewBox="0 0 24 24" width="18" height="18" role="img" aria-label="Plotar"
-                      style="display:block;color:darkblue">
-                    <!-- pin: borda -->
-                    <path d="M12 22s-6-6.4-6-11A6 6 0 1 1 18 11c0 4.6-6 11-6 11Z"
-                          fill="none" stroke="currentColor" stroke-width="2"/>
-                    <!-- alvo interno -->
-                    <circle cx="12" cy="11" r="3.2" fill="none" stroke="currentColor" stroke-width="2" />
-                    <circle cx="12" cy="11" r="1.4" fill="currentColor" />
-                  </svg>
-                `;
-                */
+  
 
                 btn.title = "Plota Georreferenciamento";
 
@@ -3986,7 +3813,7 @@ function plotarConeAzimuteComCamera(
                   btn.style.transform = "translateY(0)";
                 };
 
-btn.onclick = function() {
+                btn.onclick = function() {
   const painel = document.getElementById("painelTabela");
   const wrapper = painel.querySelector(".table-wrapper");
   
@@ -4055,16 +3882,15 @@ btn.onclick = function() {
     fecharPainel();
   }
 };             
-                return btn;
-              },
+                  return btn;
+                },
               onRemove: function(mapInstance) {}
             });
 
           window. map.addControl(new L.Control.Excel({ position: 'topright' }));
 
           window.map.on("click", onMapClick);
-
-        
+       
 
             return window.map; // É boa prática retornar a instância
         } // fim inicializaMapa
